@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, BookOpen, User, Home } from "lucide-react";
+import { Menu, X, BookOpen, User, Home, FileQuestion } from "lucide-react";
 import { Button } from "./ui/button";
 
 const Navigation = () => {
@@ -11,6 +11,7 @@ const Navigation = () => {
   const menuItems = [
     { name: "الرئيسية", path: "/", icon: Home },
     { name: "الدورات", path: "/courses", icon: BookOpen },
+    { name: "الاختبارات", path: "/exams", icon: FileQuestion },
     { name: "الملف الشخصي", path: "/profile", icon: User },
   ];
 
