@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/components/ui/use-toast";
+import { Progress } from "@/components/ui/progress";
+import { Card } from "@/components/ui/card";
+import { Trophy, ChevronRight } from "lucide-react";
 
 interface Question {
   id: number;
@@ -328,11 +331,23 @@ const ExamQuestions = () => {
     }
   });
 
+  const progress = ((currentQuestion + 1) / questions.length) * 100;
+
   const onSubmit = (data: { answer: string }) => {
     const isCorrect = parseInt(data.answer) === questions[currentQuestion].correctAnswer;
     
     if (isCorrect) {
       setScore(prev => prev + 1);
+      toast({
+        title: "إجابة صحيحة! 🎉",
+        className: "bg-green-500 text-white",
+      });
+    } else {
+      toast({
+        title: "إجابة خاطئة",
+        description: "حاول مرة أخرى في السؤال القادم",
+        className: "bg-red-500 text-white",
+      });
     }
 
     if (currentQuestion < questions.length - 1) {
@@ -348,24 +363,32 @@ const ExamQuestions = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800" dir="rtl">
       <Navigation />
       
       <div className="max-w-4xl mx-auto px-4 py-8">
         {!showResults ? (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold">اختبار القانون</h1>
-              <span className="text-muted-foreground">
-                السؤال {currentQuestion + 1} من {questions.length}
-              </span>
+            <div className="flex flex-col space-y-4">
+              <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">
+                  اختبار القانون
+                </h1>
+                <span className="text-muted-foreground font-medium">
+                  السؤال {currentQuestion + 1} من {questions.length}
+                </span>
+              </div>
+              
+              <Progress value={progress} className="h-2 w-full" />
             </div>
 
-            <div className="p-6 border rounded-lg shadow-sm">
-              <h2 className="text-xl mb-4">{questions[currentQuestion].text}</h2>
+            <Card className="p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <h2 className="text-xl font-semibold mb-6 text-gray-800 dark:text-gray-200">
+                {questions[currentQuestion].text}
+              </h2>
               
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <FormField
                     control={form.control}
                     name="answer"
@@ -375,12 +398,15 @@ const ExamQuestions = () => {
                           <RadioGroup
                             onValueChange={field.onChange}
                             value={field.value}
-                            className="space-y-3"
+                            className="space-y-4"
                           >
                             {questions[currentQuestion].options.map((option, index) => (
-                              <div key={index} className="flex items-center space-x-2 space-x-reverse">
+                              <div 
+                                key={index} 
+                                className="flex items-center space-x-2 space-x-reverse p-4 rounded-lg border-2 border-gray-100 dark:border-gray-700 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer"
+                              >
                                 <RadioGroupItem value={index.toString()} id={`option-${index}`} />
-                                <FormLabel htmlFor={`option-${index}`} className="font-normal">
+                                <FormLabel htmlFor={`option-${index}`} className="font-medium cursor-pointer flex-1">
                                   {option}
                                 </FormLabel>
                               </div>
@@ -391,30 +417,42 @@ const ExamQuestions = () => {
                     )}
                   />
                   
-                  <Button type="submit" className="w-full">
+                  <Button 
+                    type="submit" 
+                    className="w-full gap-2 text-lg font-medium"
+                    size="lg"
+                  >
                     {currentQuestion === questions.length - 1 ? "إنهاء الاختبار" : "السؤال التالي"}
+                    <ChevronRight className="w-5 h-5" />
                   </Button>
                 </form>
               </Form>
-            </div>
+            </Card>
           </div>
         ) : (
-          <div className="text-center space-y-4">
-            <h2 className="text-2xl font-bold">نتيجة الاختبار</h2>
-            <p className="text-xl">
-              لقد حصلت على {score} من أصل {questions.length} نقطة
+          <Card className="p-8 text-center space-y-6 max-w-lg mx-auto mt-12">
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+              <Trophy className="w-10 h-10 text-primary" />
+            </div>
+            <h2 className="text-3xl font-bold">نتيجة الاختبار</h2>
+            <p className="text-2xl">
+              لقد حصلت على <span className="font-bold text-primary">{score}</span> من أصل <span className="font-bold">{questions.length}</span> نقطة
             </p>
-            <Button 
-              onClick={() => {
-                setCurrentQuestion(0);
-                setScore(0);
-                setShowResults(false);
-                form.reset();
-              }}
-            >
-              إعادة الاختبار
-            </Button>
-          </div>
+            <div className="pt-4">
+              <Button 
+                onClick={() => {
+                  setCurrentQuestion(0);
+                  setScore(0);
+                  setShowResults(false);
+                  form.reset();
+                }}
+                size="lg"
+                className="text-lg"
+              >
+                إعادة الاختبار
+              </Button>
+            </div>
+          </Card>
         )}
       </div>
     </div>
