@@ -9,18 +9,18 @@ const Navigation = () => {
   const toggleMenu = () => setIsOpen(!isOpen);
 
   const menuItems = [
-    { name: "Home", path: "/", icon: Home },
-    { name: "Courses", path: "/courses", icon: BookOpen },
-    { name: "Profile", path: "/profile", icon: User },
+    { name: "الرئيسية", path: "/", icon: Home },
+    { name: "الدورات", path: "/courses", icon: BookOpen },
+    { name: "الملف الشخصي", path: "/profile", icon: User },
   ];
 
   return (
-    <nav className="bg-primary text-primary-foreground">
+    <nav className="bg-primary text-primary-foreground" dir="rtl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0">
-              <h1 className="text-xl font-bold">Law Portal</h1>
+              <h1 className="text-xl font-bold">بوابة القانون</h1>
             </Link>
           </div>
           
@@ -35,13 +35,13 @@ const Navigation = () => {
                     to={item.path}
                     className="flex items-center px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-foreground/10"
                   >
-                    <Icon className="w-4 h-4 mr-2" />
+                    <Icon className="w-4 h-4 ml-2" />
                     {item.name}
                   </Link>
                 );
               })}
-              <Button variant="secondary" className="ml-4">
-                Login
+              <Button variant="secondary" className="mr-4">
+                تسجيل الدخول
               </Button>
             </div>
           </div>
@@ -72,13 +72,13 @@ const Navigation = () => {
                   className="flex items-center px-3 py-2 rounded-md text-sm font-medium hover:bg-primary-foreground/10"
                   onClick={() => setIsOpen(false)}
                 >
-                  <Icon className="w-4 h-4 mr-2" />
+                  <Icon className="w-4 h-4 ml-2" />
                   {item.name}
                 </Link>
               );
             })}
             <Button variant="secondary" className="w-full mt-4">
-              Login
+              تسجيل الدخول
             </Button>
           </div>
         </div>

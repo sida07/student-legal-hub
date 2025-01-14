@@ -6,62 +6,62 @@ import { BookOpen, Search, Users, Award } from "lucide-react";
 
 const courses = [
   {
-    title: "Introduction to Law",
-    description: "Learn the fundamentals of legal systems and principles",
+    title: "مقدمة في القانون",
+    description: "تعلم أساسيات النظم والمبادئ القانونية",
     students: 234,
-    level: "Beginner",
-    duration: "8 weeks",
+    level: "مبتدئ",
+    duration: "8 أسابيع",
   },
   {
-    title: "Constitutional Law",
-    description: "Study the core principles of constitutional law",
+    title: "القانون الدستوري",
+    description: "دراسة المبادئ الأساسية للقانون الدستوري",
     students: 189,
-    level: "Intermediate",
-    duration: "12 weeks",
+    level: "متوسط",
+    duration: "12 أسبوع",
   },
   {
-    title: "Criminal Law",
-    description: "Explore criminal justice and legal procedures",
+    title: "القانون الجنائي",
+    description: "استكشاف العدالة الجنائية والإجراءات القانونية",
     students: 156,
-    level: "Advanced",
-    duration: "10 weeks",
+    level: "متقدم",
+    duration: "10 أسابيع",
   },
   {
-    title: "Civil Law",
-    description: "Understanding civil rights and responsibilities",
+    title: "القانون المدني",
+    description: "فهم الحقوق والمسؤوليات المدنية",
     students: 145,
-    level: "Intermediate",
-    duration: "10 weeks",
+    level: "متوسط",
+    duration: "10 أسابيع",
   },
   {
-    title: "International Law",
-    description: "Study global legal frameworks and institutions",
+    title: "القانون الدولي",
+    description: "دراسة الأطر والمؤسسات القانونية العالمية",
     students: 178,
-    level: "Advanced",
-    duration: "14 weeks",
+    level: "متقدم",
+    duration: "14 أسبوع",
   },
   {
-    title: "Legal Writing",
-    description: "Master the art of legal documentation",
+    title: "الكتابة القانونية",
+    description: "إتقان فن التوثيق القانوني",
     students: 210,
-    level: "Beginner",
-    duration: "6 weeks",
+    level: "مبتدئ",
+    duration: "6 أسابيع",
   },
 ];
 
 const Courses = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" dir="rtl">
       <Navigation />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold mb-4 md:mb-0">Available Courses</h1>
+          <h1 className="text-3xl font-bold mb-4 md:mb-0">الدورات المتاحة</h1>
           <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
-              placeholder="Search courses..."
-              className="pl-9"
+              placeholder="ابحث عن الدورات..."
+              className="pr-9"
             />
           </div>
         </div>
@@ -77,21 +77,21 @@ const Courses = () => {
                 <div className="space-y-2 text-sm text-muted-foreground mb-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <Users className="w-4 h-4 mr-1" />
-                      {course.students} students
+                      <Users className="w-4 h-4 ml-1" />
+                      {course.students} طالب
                     </div>
                     <div className="flex items-center">
-                      <Award className="w-4 h-4 mr-1" />
+                      <Award className="w-4 h-4 ml-1" />
                       {course.level}
                     </div>
                   </div>
                   <div className="flex items-center">
-                    <BookOpen className="w-4 h-4 mr-1" />
-                    Duration: {course.duration}
+                    <BookOpen className="w-4 h-4 ml-1" />
+                    المدة: {course.duration}
                   </div>
                 </div>
                 <Button className="w-full">
-                  Enroll Now
+                  سجل الآن
                 </Button>
               </CardContent>
             </Card>
