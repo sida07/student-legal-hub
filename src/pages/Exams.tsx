@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, Calendar } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const historicalExams = [
   { year: "2024", count: 5 },
@@ -58,8 +59,10 @@ const Exams = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button className="w-full">
-                      عرض الاختبارات
+                    <Button className="w-full" asChild>
+                      <Link to="/exam-questions">
+                        بدء الاختبار
+                      </Link>
                     </Button>
                   </CardContent>
                 </Card>
@@ -84,8 +87,10 @@ const Exams = () => {
                     <div className="mb-4 text-sm text-muted-foreground">
                       {subject.count} اختبارات متوفرة
                     </div>
-                    <Button className="w-full">
-                      عرض الاختبارات
+                    <Button className="w-full" asChild>
+                      <Link to="/exam-questions">
+                        بدء الاختبار
+                      </Link>
                     </Button>
                   </CardContent>
                 </Card>
