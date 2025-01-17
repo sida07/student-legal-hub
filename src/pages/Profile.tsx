@@ -37,7 +37,6 @@ const Profile = () => {
   };
 
   const handleSaveChanges = () => {
-    // Here you would typically make an API call to save the changes
     console.log("Saving profile changes:", formData);
     
     toast({
@@ -47,118 +46,141 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen bg-[#F8F9FA]" dir="rtl">
       <Navigation />
       
       <div className="max-w-4xl mx-auto p-6">
-        <div className="space-y-8">
+        {/* Hero Section with Background Image */}
+        <div className="relative mb-8 rounded-lg overflow-hidden h-48 bg-gradient-to-r from-primary to-secondary">
+          <div className="absolute inset-0 bg-black/20"></div>
+        </div>
+
+        <div className="space-y-6">
           {/* Profile Header */}
-          <div className="flex items-center space-x-4 space-x-reverse">
-            <div className="relative">
-              <Avatar className="w-24 h-24">
-                <AvatarImage src={imageUrl} />
-                <AvatarFallback>
-                  <User className="w-12 h-12" />
-                </AvatarFallback>
-              </Avatar>
-              <label 
-                htmlFor="profile-image" 
-                className="absolute bottom-0 right-0 p-1 bg-primary text-primary-foreground rounded-full cursor-pointer hover:bg-primary/90"
-              >
-                <Camera className="w-4 h-4" />
-              </label>
-              <input
-                id="profile-image"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageChange}
-              />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">{formData.name}</h1>
-              <p className="text-muted-foreground">طالب قانون - السنة الثالثة</p>
+          <div className="relative -mt-20 mb-8 px-6">
+            <div className="flex flex-col items-center">
+              <div className="relative">
+                <Avatar className="w-32 h-32 border-4 border-white shadow-lg">
+                  <AvatarImage src={imageUrl} />
+                  <AvatarFallback>
+                    <User className="w-16 h-16" />
+                  </AvatarFallback>
+                </Avatar>
+                <label 
+                  htmlFor="profile-image" 
+                  className="absolute bottom-2 right-2 p-2 bg-white text-primary rounded-full cursor-pointer hover:bg-gray-50 shadow-md transition-colors"
+                >
+                  <Camera className="w-5 h-5" />
+                </label>
+                <input
+                  id="profile-image"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+              </div>
+              <div className="mt-4 text-center">
+                <h1 className="text-2xl font-bold text-gray-900">{formData.name}</h1>
+                <p className="text-gray-600">طالب قانون - السنة الثالثة</p>
+              </div>
             </div>
           </div>
 
-          {/* Settings Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="w-5 h-5" />
-                إعدادات الحساب
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">الاسم الكامل</Label>
-                <Input 
-                  id="name" 
-                  value={formData.name}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">البريد الإلكتروني</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  value={formData.email}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">رقم الهاتف</Label>
-                <Input 
-                  id="phone" 
-                  type="tel" 
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <Button onClick={handleSaveChanges}>حفظ التغييرات</Button>
-            </CardContent>
-          </Card>
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Settings Section */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Settings className="w-5 h-5 text-primary" />
+                  إعدادات الحساب
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">الاسم الكامل</Label>
+                  <Input 
+                    id="name" 
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="bg-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">البريد الإلكتروني</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="bg-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">رقم الهاتف</Label>
+                  <Input 
+                    id="phone" 
+                    type="tel" 
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="bg-white"
+                  />
+                </div>
+                <Button 
+                  onClick={handleSaveChanges}
+                  className="w-full bg-primary hover:bg-primary/90 text-white"
+                >
+                  حفظ التغييرات
+                </Button>
+              </CardContent>
+            </Card>
 
-          {/* Subscription Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="w-5 h-5" />
-                الاشتراك الحالي
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-secondary/50 p-4 rounded-lg">
-                <h3 className="font-semibold text-lg mb-2">الباقة المتقدمة</h3>
-                <p className="text-muted-foreground mb-4">صالح حتى: 31 ديسمبر 2024</p>
-                <Button variant="secondary">تجديد الاشتراك</Button>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Subscription Section */}
+            <Card className="shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Bell className="w-5 h-5 text-primary" />
+                  الاشتراك الحالي
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gradient-to-br from-primary/5 to-secondary/5 p-6 rounded-lg border border-gray-100">
+                  <h3 className="font-semibold text-lg text-gray-900 mb-2">الباقة المتقدمة</h3>
+                  <p className="text-gray-600 mb-4">صالح حتى: 31 ديسمبر 2024</p>
+                  <Button variant="outline" className="w-full">تجديد الاشتراك</Button>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Notifications Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="w-5 h-5" />
-                إعدادات الإشعارات
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="notificationEmail">البريد الإلكتروني للإشعارات</Label>
-                <Input 
-                  id="notificationEmail" 
-                  type="email" 
-                  value={formData.notificationEmail}
-                  onChange={handleInputChange}
-                  placeholder="أدخل بريدك الإلكتروني لتلقي الإشعارات"
-                />
-              </div>
-              <Button onClick={handleSaveChanges}>حفظ التغييرات</Button>
-            </CardContent>
-          </Card>
+            {/* Notifications Section */}
+            <Card className="shadow-sm md:col-span-2">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Mail className="w-5 h-5 text-primary" />
+                  إعدادات الإشعارات
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="notificationEmail">البريد الإلكتروني للإشعارات</Label>
+                  <Input 
+                    id="notificationEmail" 
+                    type="email" 
+                    value={formData.notificationEmail}
+                    onChange={handleInputChange}
+                    className="bg-white"
+                    placeholder="أدخل بريدك الإلكتروني لتلقي الإشعارات"
+                  />
+                </div>
+                <Button 
+                  onClick={handleSaveChanges}
+                  className="w-full bg-primary hover:bg-primary/90 text-white"
+                >
+                  حفظ التغييرات
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
