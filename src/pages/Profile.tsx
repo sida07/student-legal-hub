@@ -6,9 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Bell, Camera, Mail, Settings, User } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Profile = () => {
   const [imageUrl, setImageUrl] = useState<string>("/placeholder.svg");
+  const [formData, setFormData] = useState({
+    name: "أحمد محمد",
+    email: "ahmed@example.com",
+    phone: "+966 50 123 4567",
+    notificationEmail: "ahmed@example.com"
+  });
+  const { toast } = useToast();
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -17,6 +25,25 @@ const Profile = () => {
       setImageUrl(url);
       console.log("Profile image updated:", url);
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+    console.log(`Field ${id} updated:`, value);
+  };
+
+  const handleSaveChanges = () => {
+    // Here you would typically make an API call to save the changes
+    console.log("Saving profile changes:", formData);
+    
+    toast({
+      title: "تم حفظ التغييرات",
+      description: "تم تحديث معلومات الملف الشخصي بنجاح",
+    });
   };
 
   return (
@@ -49,7 +76,7 @@ const Profile = () => {
               />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">أحمد محمد</h1>
+              <h1 className="text-2xl font-bold">{formData.name}</h1>
               <p className="text-muted-foreground">طالب قانون - السنة الثالثة</p>
             </div>
           </div>
@@ -65,16 +92,31 @@ const Profile = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">الاسم الكامل</Label>
-                <Input id="name" defaultValue="أحمد محمد" />
+                <Input 
+                  id="name" 
+                  value={formData.name}
+                  onChange={handleInputChange}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">البريد الإلكتروني</Label>
-                <Input id="email" type="email" defaultValue="ahmed@example.com" />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={formData.email}
+                  onChange={handleInputChange}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">رقم الهاتف</Label>
-                <Input id="phone" type="tel" defaultValue="+966 50 123 4567" />
+                <Input 
+                  id="phone" 
+                  type="tel" 
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                />
               </div>
+              <Button onClick={handleSaveChanges}>حفظ التغييرات</Button>
             </CardContent>
           </Card>
 
@@ -105,15 +147,16 @@ const Profile = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="notification-email">البريد الإلكتروني للإشعارات</Label>
+                <Label htmlFor="notificationEmail">البريد الإلكتروني للإشعارات</Label>
                 <Input 
-                  id="notification-email" 
+                  id="notificationEmail" 
                   type="email" 
-                  defaultValue="ahmed@example.com" 
+                  value={formData.notificationEmail}
+                  onChange={handleInputChange}
                   placeholder="أدخل بريدك الإلكتروني لتلقي الإشعارات"
                 />
               </div>
-              <Button>حفظ التغييرات</Button>
+              <Button onClick={handleSaveChanges}>حفظ التغييرات</Button>
             </CardContent>
           </Card>
         </div>
