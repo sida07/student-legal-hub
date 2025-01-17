@@ -4,6 +4,7 @@ import Courses from "./pages/Courses";
 import Exams from "./pages/Exams";
 import ExamQuestions from "./pages/ExamQuestions";
 import Profile from "./pages/Profile";
+import Discussions from "./pages/Discussions";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/exams" element={<Exams />} />
         <Route path="/exam-questions" element={<ExamQuestions />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/discussions" element={<Discussions />} />
       </Routes>
     </Router>
   );
