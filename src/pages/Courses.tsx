@@ -111,7 +111,6 @@ const Courses = () => {
   };
 
   const handleShare = (course: typeof courses[0]) => {
-    // Here you would typically implement social sharing functionality
     console.log("Sharing course:", course.title);
   };
 
