@@ -2,7 +2,7 @@ import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { BookOpen, Search, Users, Award, Star, Heart, Share2, Filter } from "lucide-react";
+import { BookOpen, Search, Users, Award, Star, Heart, Share2 } from "lucide-react";
 import { useState } from "react";
 import {
   Select,
@@ -71,7 +71,7 @@ const courses = [
 
 const Courses = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedLevel, setSelectedLevel] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("all");
   const [localCourses, setLocalCourses] = useState(courses);
 
   const handleSearch = (query: string) => {
@@ -94,7 +94,7 @@ const Courses = () => {
       );
     }
     
-    if (level) {
+    if (level && level !== 'all') {
       filtered = filtered.filter(course => course.level === level);
     }
     
@@ -139,7 +139,7 @@ const Courses = () => {
                 <SelectValue placeholder="المستوى" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">جميع المستويات</SelectItem>
+                <SelectItem value="all">جميع المستويات</SelectItem>
                 <SelectItem value="مبتدئ">مبتدئ</SelectItem>
                 <SelectItem value="متوسط">متوسط</SelectItem>
                 <SelectItem value="متقدم">متقدم</SelectItem>
