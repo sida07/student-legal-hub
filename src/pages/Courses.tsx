@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { BookOpen, Search, Users, Award, Star, Heart, Share2 } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Select,
   SelectContent,
@@ -70,6 +71,7 @@ const courses = [
 ];
 
 const Courses = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("all");
   const [localCourses, setLocalCourses] = useState(courses);
@@ -112,6 +114,11 @@ const Courses = () => {
 
   const handleShare = (course: typeof courses[0]) => {
     console.log("Sharing course:", course.title);
+  };
+
+  const handleViewCourse = (course: typeof courses[0]) => {
+    console.log("Navigating to course:", course.title);
+    navigate(`/courses/${encodeURIComponent(course.title)}`);
   };
 
   return (
@@ -210,8 +217,11 @@ const Courses = () => {
                     </div>
                   </div>
                   
-                  <Button className="w-full">
-                    سجل الآن
+                  <Button 
+                    className="w-full"
+                    onClick={() => handleViewCourse(course)}
+                  >
+                    عرض الدورة
                   </Button>
                 </div>
               </CardContent>
