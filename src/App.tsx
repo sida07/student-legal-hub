@@ -6,6 +6,7 @@ import Exams from "./pages/Exams";
 import ExamQuestions from "./pages/ExamQuestions";
 import Profile from "./pages/Profile";
 import Discussions from "./pages/Discussions";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/exam-questions" element={<ExamQuestions />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/discussions" element={<Discussions />} />
+        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </Router>
   );
