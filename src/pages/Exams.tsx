@@ -2,32 +2,27 @@ import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Calendar } from "lucide-react";
+import { FileText, Calendar, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const historicalExams = [
-  { year: "2024", count: 5 },
-  { year: "2023", count: 8 },
-  { year: "2022", count: 10 },
-  { year: "2021", count: 7 },
-  { year: "2020", count: 6 },
-];
+// Generate years from 2000 to 2024
+const years = Array.from({ length: 25 }, (_, i) => ({
+  year: (2024 - i).toString(),
+  count: 50, // كل اختبار يحتوي على 50 سؤال
+}));
 
 const subjectExams = [
   {
     title: "القانون المدني",
-    description: "اختبارات في القانون المدني والأحوال الشخصية",
-    count: 15,
+    description: "اختبار شامل في القانون المدني",
+    count: 100, // كل اختبار يحتوي على 100 سؤال
+    icon: BookOpen,
   },
   {
     title: "القانون الجزائي",
-    description: "اختبارات في القانون الجنائي والإجراءات الجزائية",
-    count: 12,
-  },
-  {
-    title: "القانون التجاري",
-    description: "اختبارات في القانون التجاري والشركات",
-    count: 8,
+    description: "اختبار شامل في القانون الجزائي",
+    count: 100, // كل اختبار يحتوي على 100 سؤال
+    icon: FileText,
   },
 ];
 
@@ -41,26 +36,26 @@ const Exams = () => {
 
         <Tabs defaultValue="historical" className="space-y-6">
           <TabsList className="w-full justify-start">
-            <TabsTrigger value="historical">الخبرات السابقة</TabsTrigger>
-            <TabsTrigger value="subjects">حسب المواد</TabsTrigger>
+            <TabsTrigger value="historical">الاختبارات السابقة</TabsTrigger>
+            <TabsTrigger value="subjects">اختبارات المواد</TabsTrigger>
           </TabsList>
 
           <TabsContent value="historical">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {historicalExams.map((exam) => (
+              {years.map((exam) => (
                 <Card key={exam.year} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Calendar className="w-5 h-5 ml-2" />
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
                       اختبارات سنة {exam.year}
                     </CardTitle>
                     <CardDescription>
-                      {exam.count} اختبارات متوفرة
+                      يحتوي على {exam.count} سؤال
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Button className="w-full" asChild>
-                      <Link to="/exam-questions">
+                      <Link to={`/exam-questions?year=${exam.year}`}>
                         بدء الاختبار
                       </Link>
                     </Button>
@@ -71,12 +66,12 @@ const Exams = () => {
           </TabsContent>
 
           <TabsContent value="subjects">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {subjectExams.map((subject) => (
                 <Card key={subject.title} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <FileText className="w-5 h-5 ml-2" />
+                    <CardTitle className="flex items-center gap-2">
+                      <subject.icon className="w-5 h-5" />
                       {subject.title}
                     </CardTitle>
                     <CardDescription>
@@ -85,10 +80,10 @@ const Exams = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="mb-4 text-sm text-muted-foreground">
-                      {subject.count} اختبارات متوفرة
+                      يحتوي على {subject.count} سؤال
                     </div>
                     <Button className="w-full" asChild>
-                      <Link to="/exam-questions">
+                      <Link to={`/exam-questions?subject=${encodeURIComponent(subject.title)}`}>
                         بدء الاختبار
                       </Link>
                     </Button>

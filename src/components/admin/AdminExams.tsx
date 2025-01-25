@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/components/ui/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Question {
   id: number;
@@ -35,18 +36,26 @@ interface Question {
 interface Exam {
   id: number;
   title: string;
-  course: string;
+  type: "historical" | "subject";
+  year?: string;
+  subject?: string;
   attempts: number;
   status: string;
   questions: Question[];
 }
 
+const years = Array.from({ length: 25 }, (_, i) => ({
+  year: (2024 - i).toString(),
+  count: 50, // كل اختبار يحتوي على 50 سؤال
+}));
+
 const AdminExams = () => {
   const [exams, setExams] = useState<Exam[]>([
     {
       id: 1,
-      title: "اختبار القانون المدني",
-      course: "مقدمة في القانون المدني",
+      title: "اختبار القانون المدني 2024",
+      type: "subject",
+      subject: "القانون المدني",
       attempts: 156,
       status: "نشط",
       questions: [],
@@ -59,19 +68,23 @@ const AdminExams = () => {
   const form = useForm({
     defaultValues: {
       title: "",
-      course: "",
+      type: "historical",
+      year: "",
+      subject: "",
       questionText: "",
-      options: ["", "", "", ""],
+      options: ["", "", ""],
       correctAnswer: "1",
       explanation: "",
     },
   });
 
   const handleAddExam = (data: any) => {
+    const maxQuestions = data.type === "historical" ? 50 : 100;
     const newExam: Exam = {
       id: exams.length + 1,
       title: data.title,
-      course: data.course,
+      type: data.type,
+      ...(data.type === "historical" ? { year: data.year } : { subject: data.subject }),
       attempts: 0,
       status: "نشط",
       questions: [],
@@ -79,17 +92,28 @@ const AdminExams = () => {
     setExams([...exams, newExam]);
     toast({
       title: "تم إضافة الاختبار بنجاح",
+      description: `يمكنك إضافة حتى ${maxQuestions} سؤال لهذا الاختبار`,
     });
   };
 
   const handleAddQuestion = (data: any) => {
     if (!selectedExam) return;
 
+    const maxQuestions = selectedExam.type === "historical" ? 50 : 100;
+    if (selectedExam.questions.length >= maxQuestions) {
+      toast({
+        title: "لا يمكن إضافة المزيد من الأسئلة",
+        description: `الحد الأقصى هو ${maxQuestions} سؤال`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newQuestion: Question = {
       id: selectedExam.questions.length + 1,
       text: data.questionText,
       options: data.options,
-      correctAnswer: parseInt(data.correctAnswer) - 1, // تحويل من 1-4 إلى 0-3
+      correctAnswer: parseInt(data.correctAnswer) - 1,
       explanation: data.explanation,
     };
 
@@ -105,7 +129,7 @@ const AdminExams = () => {
     setSelectedExam(updatedExam);
     form.reset({
       questionText: "",
-      options: ["", "", "", ""],
+      options: ["", "", ""],
       correctAnswer: "1",
       explanation: "",
     });
@@ -164,16 +188,79 @@ const AdminExams = () => {
                 />
                 <FormField
                   control={form.control}
-                  name="course"
+                  name="type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>الدورة</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
+                      <FormLabel>نوع الاختبار</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="اختر نوع الاختبار" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="historical">اختبار سنوات سابقة</SelectItem>
+                          <SelectItem value="subject">اختبار مادة</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </FormItem>
                   )}
                 />
+                {form.watch("type") === "historical" ? (
+                  <FormField
+                    control={form.control}
+                    name="year"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>السنة</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="اختر السنة" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {years.map(y => (
+                              <SelectItem key={y.year} value={y.year}>
+                                {y.year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                ) : (
+                  <FormField
+                    control={form.control}
+                    name="subject"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>المادة</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="اختر المادة" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="القانون المدني">القانون المدني</SelectItem>
+                            <SelectItem value="القانون الجزائي">القانون الجزائي</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                )}
                 <Button type="submit">إضافة</Button>
               </form>
             </Form>
@@ -185,7 +272,7 @@ const AdminExams = () => {
           <TableHeader>
             <TableRow>
               <TableHead>عنوان الاختبار</TableHead>
-              <TableHead>الدورة</TableHead>
+              <TableHead>نوع الاختبار</TableHead>
               <TableHead>عدد المحاولات</TableHead>
               <TableHead>الحالة</TableHead>
               <TableHead>الإجراءات</TableHead>
@@ -195,7 +282,7 @@ const AdminExams = () => {
             {exams.map((exam) => (
               <TableRow key={exam.id}>
                 <TableCell>{exam.title}</TableCell>
-                <TableCell>{exam.course}</TableCell>
+                <TableCell>{exam.type === "historical" ? "اختبار سنوات سابقة" : "اختبار مادة"}</TableCell>
                 <TableCell>{exam.attempts}</TableCell>
                 <TableCell>{exam.status}</TableCell>
                 <TableCell>
@@ -237,7 +324,7 @@ const AdminExams = () => {
                                   </FormItem>
                                 )}
                               />
-                              {[0, 1, 2, 3].map((index) => (
+                              {[0, 1, 2].map((index) => (
                                 <FormField
                                   key={index}
                                   control={form.control}
@@ -257,12 +344,12 @@ const AdminExams = () => {
                                 name="correctAnswer"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel>رقم الإجابة الصحيحة (1-4)</FormLabel>
+                                    <FormLabel>رقم الإجابة الصحيحة (1-3)</FormLabel>
                                     <FormControl>
                                       <Input 
                                         type="number" 
                                         min="1" 
-                                        max="4" 
+                                        max="3" 
                                         {...field}
                                       />
                                     </FormControl>
@@ -290,7 +377,7 @@ const AdminExams = () => {
                                     setIsAddingQuestion(false);
                                     form.reset({
                                       questionText: "",
-                                      options: ["", "", "", ""],
+                                      options: ["", "", ""],
                                       correctAnswer: "1",
                                       explanation: "",
                                     });
