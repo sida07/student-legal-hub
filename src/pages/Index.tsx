@@ -1,7 +1,9 @@
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Users, Award, ArrowRight } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BookOpen, Users, Award, ArrowRight, Calendar, TestTube } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const featuredCourses = [
   {
@@ -27,12 +29,32 @@ const featuredCourses = [
   },
 ];
 
+const years = Array.from({ length: 25 }, (_, i) => ({
+  year: (2024 - i).toString(),
+  count: 50,
+}));
+
+const subjectExams = [
+  {
+    title: "القانون المدني",
+    description: "اختبار شامل في القانون المدني",
+    count: 100,
+    attempts: 156,
+  },
+  {
+    title: "القانون الجزائي",
+    description: "اختبار شامل في القانون الجزائي",
+    count: 100,
+    attempts: 89,
+  },
+];
+
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      {/* Hero Section with Background Image */}
+      {/* Hero Section */}
       <div 
         className="relative bg-primary text-primary-foreground py-24" 
         style={{
@@ -64,7 +86,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Featured Courses with Modern Cards */}
+      {/* Featured Courses */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16" dir="rtl">
         <h2 className="text-3xl font-bold text-center mb-12">الدورات المميزة</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -108,7 +130,85 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Features Section with Modern Design */}
+      {/* Exams Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16" dir="rtl">
+        <h2 className="text-3xl font-bold text-center mb-12">بنك الاختبارات القانونية</h2>
+        
+        <Tabs defaultValue="historical" className="space-y-8">
+          <TabsList className="w-full justify-start">
+            <TabsTrigger value="historical" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              اختبارات السنوات السابقة
+            </TabsTrigger>
+            <TabsTrigger value="subjects" className="flex items-center gap-2">
+              <TestTube className="w-4 h-4" />
+              اختبارات المواد
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="historical">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {years.map((exam) => (
+                <Card key={exam.year} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
+                      اختبارات سنة {exam.year}
+                    </CardTitle>
+                    <CardDescription>
+                      يحتوي على {exam.count} سؤال
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button className="w-full" asChild>
+                      <Link to={`/exam-questions?year=${exam.year}`}>
+                        بدء الاختبار
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="subjects">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {subjectExams.map((subject) => (
+                <Card key={subject.title} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <BookOpen className="w-5 h-5" />
+                      {subject.title}
+                    </CardTitle>
+                    <CardDescription>
+                      {subject.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between mb-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <TestTube className="w-4 h-4" />
+                        {subject.count} سؤال
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        {subject.attempts} محاولة
+                      </div>
+                    </div>
+                    <Button className="w-full" asChild>
+                      <Link to={`/exam-questions?subject=${encodeURIComponent(subject.title)}`}>
+                        بدء الاختبار
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Features Section */}
       <div className="bg-gradient-to-b from-secondary/10 to-background py-16" dir="rtl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
