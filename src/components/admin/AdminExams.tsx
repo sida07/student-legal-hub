@@ -62,7 +62,7 @@ const AdminExams = () => {
       course: "",
       questionText: "",
       options: ["", "", "", ""],
-      correctAnswer: 0,
+      correctAnswer: "1",
       explanation: "",
     },
   });
@@ -89,7 +89,7 @@ const AdminExams = () => {
       id: selectedExam.questions.length + 1,
       text: data.questionText,
       options: data.options,
-      correctAnswer: parseInt(data.correctAnswer),
+      correctAnswer: parseInt(data.correctAnswer) - 1, // تحويل من 1-4 إلى 0-3
       explanation: data.explanation,
     };
 
@@ -103,7 +103,12 @@ const AdminExams = () => {
     ));
 
     setSelectedExam(updatedExam);
-    form.reset();
+    form.reset({
+      questionText: "",
+      options: ["", "", "", ""],
+      correctAnswer: "1",
+      explanation: "",
+    });
     setIsAddingQuestion(false);
     toast({
       title: "تم إضافة السؤال بنجاح",
@@ -259,7 +264,6 @@ const AdminExams = () => {
                                         min="1" 
                                         max="4" 
                                         {...field}
-                                        onChange={(e) => field.onChange(parseInt(e.target.value) - 1)}
                                       />
                                     </FormControl>
                                   </FormItem>
@@ -282,7 +286,15 @@ const AdminExams = () => {
                                 <Button 
                                   type="button" 
                                   variant="outline"
-                                  onClick={() => setIsAddingQuestion(false)}
+                                  onClick={() => {
+                                    setIsAddingQuestion(false);
+                                    form.reset({
+                                      questionText: "",
+                                      options: ["", "", "", ""],
+                                      correctAnswer: "1",
+                                      explanation: "",
+                                    });
+                                  }}
                                 >
                                   إلغاء
                                 </Button>
