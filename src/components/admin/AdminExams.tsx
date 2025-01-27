@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, X } from "lucide-react";
+import { Plus, Edit, X, Save } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -46,7 +46,7 @@ interface Exam {
 
 const years = Array.from({ length: 25 }, (_, i) => ({
   year: (2024 - i).toString(),
-  count: 50, // كل اختبار يحتوي على 50 سؤال
+  count: 50,
 }));
 
 const AdminExams = () => {
@@ -63,6 +63,7 @@ const AdminExams = () => {
   ]);
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const { toast } = useToast();
 
   const form = useForm({
@@ -96,11 +97,22 @@ const AdminExams = () => {
     });
   };
 
+  const handleEditQuestion = (question: Question) => {
+    setEditingQuestion(question);
+    form.reset({
+      questionText: question.text,
+      options: question.options,
+      correctAnswer: (question.correctAnswer + 1).toString(),
+      explanation: question.explanation,
+    });
+    setIsAddingQuestion(true);
+  };
+
   const handleAddQuestion = (data: any) => {
     if (!selectedExam) return;
 
     const maxQuestions = selectedExam.type === "historical" ? 50 : 100;
-    if (selectedExam.questions.length >= maxQuestions) {
+    if (selectedExam.questions.length >= maxQuestions && !editingQuestion) {
       toast({
         title: "لا يمكن إضافة المزيد من الأسئلة",
         description: `الحد الأقصى هو ${maxQuestions} سؤال`,
@@ -109,17 +121,35 @@ const AdminExams = () => {
       return;
     }
 
-    const newQuestion: Question = {
-      id: selectedExam.questions.length + 1,
+    const questionData = {
       text: data.questionText,
       options: data.options,
       correctAnswer: parseInt(data.correctAnswer) - 1,
       explanation: data.explanation,
     };
 
+    let updatedQuestions;
+    if (editingQuestion) {
+      updatedQuestions = selectedExam.questions.map(q => 
+        q.id === editingQuestion.id ? { ...questionData, id: q.id } : q
+      );
+      toast({
+        title: "تم تحديث السؤال بنجاح",
+      });
+    } else {
+      const newQuestion = {
+        ...questionData,
+        id: selectedExam.questions.length + 1,
+      };
+      updatedQuestions = [...selectedExam.questions, newQuestion];
+      toast({
+        title: "تم إضافة السؤال بنجاح",
+      });
+    }
+
     const updatedExam = {
       ...selectedExam,
-      questions: [...selectedExam.questions, newQuestion],
+      questions: updatedQuestions,
     };
 
     setExams(exams.map(exam => 
@@ -134,9 +164,7 @@ const AdminExams = () => {
       explanation: "",
     });
     setIsAddingQuestion(false);
-    toast({
-      title: "تم إضافة السؤال بنجاح",
-    });
+    setEditingQuestion(null);
   };
 
   const handleDeleteQuestion = (questionId: number) => {
@@ -154,6 +182,17 @@ const AdminExams = () => {
     setSelectedExam(updatedExam);
     toast({
       title: "تم حذف السؤال بنجاح",
+    });
+  };
+
+  const cancelEdit = () => {
+    setIsAddingQuestion(false);
+    setEditingQuestion(null);
+    form.reset({
+      questionText: "",
+      options: ["", "", ""],
+      correctAnswer: "1",
+      explanation: "",
     });
   };
 
@@ -302,7 +341,10 @@ const AdminExams = () => {
                       </DialogHeader>
                       <div className="space-y-4">
                         <Button
-                          onClick={() => setIsAddingQuestion(true)}
+                          onClick={() => {
+                            setIsAddingQuestion(true);
+                            setEditingQuestion(null);
+                          }}
                           className="flex items-center gap-2"
                         >
                           <Plus className="h-4 w-4" />
@@ -369,19 +411,13 @@ const AdminExams = () => {
                                 )}
                               />
                               <div className="flex gap-2">
-                                <Button type="submit">حفظ السؤال</Button>
+                                <Button type="submit">
+                                  {editingQuestion ? "حفظ التعديلات" : "حفظ السؤال"}
+                                </Button>
                                 <Button 
                                   type="button" 
                                   variant="outline"
-                                  onClick={() => {
-                                    setIsAddingQuestion(false);
-                                    form.reset({
-                                      questionText: "",
-                                      options: ["", "", ""],
-                                      correctAnswer: "1",
-                                      explanation: "",
-                                    });
-                                  }}
+                                  onClick={cancelEdit}
                                 >
                                   إلغاء
                                 </Button>
@@ -400,13 +436,22 @@ const AdminExams = () => {
                                   </CardTitle>
                                   <p className="mt-2">{question.text}</p>
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleDeleteQuestion(question.id)}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEditQuestion(question)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDeleteQuestion(question.id)}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </CardHeader>
                               <CardContent>
                                 <div className="space-y-2">
