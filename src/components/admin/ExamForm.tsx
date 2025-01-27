@@ -3,19 +3,22 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
+import { Exam } from "./types";
 
 interface ExamFormProps {
   onSubmit: (data: any) => void;
   years: { year: string; count: number }[];
+  initialData?: Exam | null;
+  isEditing?: boolean;
 }
 
-const ExamForm = ({ onSubmit, years }: ExamFormProps) => {
+const ExamForm = ({ onSubmit, years, initialData, isEditing }: ExamFormProps) => {
   const form = useForm({
     defaultValues: {
-      title: "",
-      type: "historical",
-      year: "",
-      subject: "",
+      title: initialData?.title || "",
+      type: initialData?.type || "historical",
+      year: initialData?.year || "",
+      subject: initialData?.subject || "",
     },
   });
 
@@ -109,7 +112,9 @@ const ExamForm = ({ onSubmit, years }: ExamFormProps) => {
             )}
           />
         )}
-        <Button type="submit">إضافة</Button>
+        <Button type="submit">
+          {isEditing ? "حفظ التعديلات" : "إضافة"}
+        </Button>
       </form>
     </Form>
   );

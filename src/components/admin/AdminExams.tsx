@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Edit } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -69,6 +69,7 @@ const AdminExams = () => {
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [editingExam, setEditingExam] = useState<Exam | null>(null);
   const { toast } = useToast();
 
   const handleAddExam = (data: any) => {
@@ -86,6 +87,26 @@ const AdminExams = () => {
     toast({
       title: "تم إضافة الاختبار بنجاح",
       description: `يمكنك إضافة حتى ${maxQuestions} سؤال لهذا الاختبار`,
+    });
+  };
+
+  const handleEditExam = (data: any) => {
+    if (!editingExam) return;
+    
+    const updatedExam: Exam = {
+      ...editingExam,
+      title: data.title,
+      type: data.type,
+      ...(data.type === "historical" ? { year: data.year } : { subject: data.subject }),
+    };
+
+    setExams(exams.map(exam => 
+      exam.id === editingExam.id ? updatedExam : exam
+    ));
+
+    setEditingExam(null);
+    toast({
+      title: "تم تحديث الاختبار بنجاح",
     });
   };
 
@@ -198,61 +219,86 @@ const AdminExams = () => {
                 <TableCell>{exam.attempts}</TableCell>
                 <TableCell>{exam.status}</TableCell>
                 <TableCell>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setSelectedExam(exam)}
-                      >
-                        إدارة الأسئلة
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl">
-                      <DialogHeader>
-                        <DialogTitle>إدارة أسئلة {exam.title}</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <Button
-                          onClick={() => {
-                            setIsAddingQuestion(true);
-                            setEditingQuestion(null);
-                          }}
-                          className="flex items-center gap-2"
+                  <div className="flex gap-2">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setSelectedExam(exam)}
                         >
-                          <Plus className="h-4 w-4" />
-                          إضافة سؤال جديد
+                          إدارة الأسئلة
                         </Button>
-
-                        {isAddingQuestion && (
-                          <QuestionForm
-                            onSubmit={handleAddQuestion}
-                            onCancel={() => {
-                              setIsAddingQuestion(false);
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl">
+                        <DialogHeader>
+                          <DialogTitle>إدارة أسئلة {exam.title}</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <Button
+                            onClick={() => {
+                              setIsAddingQuestion(true);
                               setEditingQuestion(null);
                             }}
-                            initialData={editingQuestion}
-                            isEditing={!!editingQuestion}
-                          />
-                        )}
+                            className="flex items-center gap-2"
+                          >
+                            <Plus className="h-4 w-4" />
+                            إضافة سؤال جديد
+                          </Button>
 
-                        <div className="space-y-4">
-                          {selectedExam?.questions.map((question, index) => (
-                            <QuestionCard
-                              key={question.id}
-                              question={question}
-                              index={index}
-                              onEdit={(q) => {
-                                setEditingQuestion(q);
-                                setIsAddingQuestion(true);
+                          {isAddingQuestion && (
+                            <QuestionForm
+                              onSubmit={handleAddQuestion}
+                              onCancel={() => {
+                                setIsAddingQuestion(false);
+                                setEditingQuestion(null);
                               }}
-                              onDelete={handleDeleteQuestion}
+                              initialData={editingQuestion}
+                              isEditing={!!editingQuestion}
                             />
-                          ))}
+                          )}
+
+                          <div className="space-y-4">
+                            {selectedExam?.questions.map((question, index) => (
+                              <QuestionCard
+                                key={question.id}
+                                question={question}
+                                index={index}
+                                onEdit={(q) => {
+                                  setEditingQuestion(q);
+                                  setIsAddingQuestion(true);
+                                }}
+                                onDelete={handleDeleteQuestion}
+                              />
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogContent>
+                    </Dialog>
+
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setEditingExam(exam)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>تعديل الاختبار</DialogTitle>
+                        </DialogHeader>
+                        <ExamForm 
+                          onSubmit={handleEditExam} 
+                          years={years}
+                          initialData={editingExam}
+                          isEditing={true}
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
