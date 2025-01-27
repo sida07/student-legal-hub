@@ -58,9 +58,35 @@ const AdminExams = () => {
       subject: "القانون المدني",
       attempts: 156,
       status: "نشط",
-      questions: [],
+      questions: [
+        {
+          id: 1,
+          text: "سؤال تجريبي 1",
+          options: ["خيار 1", "خيار 2", "خيار 3"],
+          correctAnswer: 0,
+          explanation: "شرح الإجابة الصحيحة"
+        }
+      ],
     },
+    {
+      id: 2,
+      title: "اختبار سنة 2023",
+      type: "historical",
+      year: "2023",
+      attempts: 89,
+      status: "نشط",
+      questions: [
+        {
+          id: 1,
+          text: "سؤال من سنة 2023",
+          options: ["خيار 1", "خيار 2", "خيار 3"],
+          correctAnswer: 1,
+          explanation: "شرح الإجابة الصحيحة"
+        }
+      ],
+    }
   ]);
+
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
