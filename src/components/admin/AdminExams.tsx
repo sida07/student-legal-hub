@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit } from "lucide-react";
+import { Plus, Edit, Copy, ChartBar } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -70,6 +70,7 @@ const AdminExams = () => {
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [editingExam, setEditingExam] = useState<Exam | null>(null);
+  const [showStats, setShowStats] = useState(false);
   const { toast } = useToast();
 
   const handleAddExam = (data: any) => {
@@ -88,6 +89,32 @@ const AdminExams = () => {
       title: "تم إضافة الاختبار بنجاح",
       description: `يمكنك إضافة حتى ${maxQuestions} سؤال لهذا الاختبار`,
     });
+  };
+
+  const handleCopyExam = (exam: Exam) => {
+    const newExam: Exam = {
+      ...exam,
+      id: exams.length + 1,
+      title: `نسخة من ${exam.title}`,
+      attempts: 0,
+      questions: [...exam.questions],
+    };
+    setExams([...exams, newExam]);
+    toast({
+      title: "تم نسخ الاختبار بنجاح",
+    });
+  };
+
+  const calculateExamStats = (exam: Exam) => {
+    const totalQuestions = exam.questions.length;
+    const averageAttempts = exam.attempts / (totalQuestions || 1);
+    
+    return {
+      totalQuestions,
+      averageAttempts: averageAttempts.toFixed(1),
+      successRate: "75%", // هذه نسبة افتراضية، يمكن حسابها من البيانات الفعلية
+      averageTime: "15 دقيقة", // وقت افتراضي
+    };
   };
 
   const handleEditExam = (data: any) => {
@@ -235,16 +262,59 @@ const AdminExams = () => {
                           <DialogTitle>إدارة أسئلة {exam.title}</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4">
-                          <Button
-                            onClick={() => {
-                              setIsAddingQuestion(true);
-                              setEditingQuestion(null);
-                            }}
-                            className="flex items-center gap-2"
-                          >
-                            <Plus className="h-4 w-4" />
-                            إضافة سؤال جديد
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => {
+                                setIsAddingQuestion(true);
+                                setEditingQuestion(null);
+                              }}
+                              className="flex items-center gap-2"
+                            >
+                              <Plus className="h-4 w-4" />
+                              إضافة سؤال جديد
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => setShowStats(true)}
+                              className="flex items-center gap-2"
+                            >
+                              <ChartBar className="h-4 w-4" />
+                              إحصائيات الاختبار
+                            </Button>
+                          </div>
+
+                          {showStats && (
+                            <Card>
+                              <CardHeader>
+                                <CardTitle>إحصائيات الاختبار</CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                {(() => {
+                                  const stats = calculateExamStats(exam);
+                                  return (
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">عدد الأسئلة</p>
+                                        <p className="text-2xl font-bold">{stats.totalQuestions}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">متوسط المحاولات</p>
+                                        <p className="text-2xl font-bold">{stats.averageAttempts}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">نسبة النجاح</p>
+                                        <p className="text-2xl font-bold">{stats.successRate}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">متوسط وقت الإجابة</p>
+                                        <p className="text-2xl font-bold">{stats.averageTime}</p>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
+                              </CardContent>
+                            </Card>
+                          )}
 
                           {isAddingQuestion && (
                             <QuestionForm
@@ -275,6 +345,14 @@ const AdminExams = () => {
                         </div>
                       </DialogContent>
                     </Dialog>
+
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleCopyExam(exam)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
 
                     <Dialog>
                       <DialogTrigger asChild>
