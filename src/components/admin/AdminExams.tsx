@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, X, Save } from "lucide-react";
+import { Plus } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -17,32 +17,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
 import { useToast } from "@/components/ui/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-interface Question {
-  id: number;
-  text: string;
-  options: string[];
-  correctAnswer: number;
-  explanation: string;
-}
-
-interface Exam {
-  id: number;
-  title: string;
-  type: "historical" | "subject";
-  year?: string;
-  subject?: string;
-  attempts: number;
-  status: string;
-  questions: Question[];
-}
+import ExamForm from "./ExamForm";
+import QuestionForm from "./QuestionForm";
+import QuestionCard from "./QuestionCard";
+import { Exam, Question } from "./types";
 
 const years = Array.from({ length: 25 }, (_, i) => ({
   year: (2024 - i).toString(),
@@ -92,19 +71,6 @@ const AdminExams = () => {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const { toast } = useToast();
 
-  const form = useForm({
-    defaultValues: {
-      title: "",
-      type: "historical",
-      year: "",
-      subject: "",
-      questionText: "",
-      options: ["", "", ""],
-      correctAnswer: "1",
-      explanation: "",
-    },
-  });
-
   const handleAddExam = (data: any) => {
     const maxQuestions = data.type === "historical" ? 50 : 100;
     const newExam: Exam = {
@@ -121,17 +87,6 @@ const AdminExams = () => {
       title: "تم إضافة الاختبار بنجاح",
       description: `يمكنك إضافة حتى ${maxQuestions} سؤال لهذا الاختبار`,
     });
-  };
-
-  const handleEditQuestion = (question: Question) => {
-    setEditingQuestion(question);
-    form.reset({
-      questionText: question.text,
-      options: question.options,
-      correctAnswer: (question.correctAnswer + 1).toString(),
-      explanation: question.explanation,
-    });
-    setIsAddingQuestion(true);
   };
 
   const handleAddQuestion = (data: any) => {
@@ -183,12 +138,6 @@ const AdminExams = () => {
     ));
 
     setSelectedExam(updatedExam);
-    form.reset({
-      questionText: "",
-      options: ["", "", ""],
-      correctAnswer: "1",
-      explanation: "",
-    });
     setIsAddingQuestion(false);
     setEditingQuestion(null);
   };
@@ -211,17 +160,6 @@ const AdminExams = () => {
     });
   };
 
-  const cancelEdit = () => {
-    setIsAddingQuestion(false);
-    setEditingQuestion(null);
-    form.reset({
-      questionText: "",
-      options: ["", "", ""],
-      correctAnswer: "1",
-      explanation: "",
-    });
-  };
-
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -237,98 +175,7 @@ const AdminExams = () => {
             <DialogHeader>
               <DialogTitle>إضافة اختبار جديد</DialogTitle>
             </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleAddExam)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>عنوان الاختبار</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>نوع الاختبار</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="اختر نوع الاختبار" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="historical">اختبار سنوات سابقة</SelectItem>
-                          <SelectItem value="subject">اختبار مادة</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-                {form.watch("type") === "historical" ? (
-                  <FormField
-                    control={form.control}
-                    name="year"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>السنة</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="اختر السنة" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {years.map(y => (
-                              <SelectItem key={y.year} value={y.year}>
-                                {y.year}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                ) : (
-                  <FormField
-                    control={form.control}
-                    name="subject"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>المادة</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="اختر المادة" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="القانون المدني">القانون المدني</SelectItem>
-                            <SelectItem value="القانون الجزائي">القانون الجزائي</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                )}
-                <Button type="submit">إضافة</Button>
-              </form>
-            </Form>
+            <ExamForm onSubmit={handleAddExam} years={years} />
           </DialogContent>
         </Dialog>
       </CardHeader>
@@ -378,130 +225,29 @@ const AdminExams = () => {
                         </Button>
 
                         {isAddingQuestion && (
-                          <Form {...form}>
-                            <form onSubmit={form.handleSubmit(handleAddQuestion)} className="space-y-4">
-                              <FormField
-                                control={form.control}
-                                name="questionText"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>نص السؤال</FormLabel>
-                                    <FormControl>
-                                      <Textarea {...field} />
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                              {[0, 1, 2].map((index) => (
-                                <FormField
-                                  key={index}
-                                  control={form.control}
-                                  name={`options.${index}`}
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>الخيار {index + 1}</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} />
-                                      </FormControl>
-                                    </FormItem>
-                                  )}
-                                />
-                              ))}
-                              <FormField
-                                control={form.control}
-                                name="correctAnswer"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>رقم الإجابة الصحيحة (1-3)</FormLabel>
-                                    <FormControl>
-                                      <Input 
-                                        type="number" 
-                                        min="1" 
-                                        max="3" 
-                                        {...field}
-                                      />
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={form.control}
-                                name="explanation"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>تعليل الإجابة الصحيحة</FormLabel>
-                                    <FormControl>
-                                      <Textarea {...field} />
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                              <div className="flex gap-2">
-                                <Button type="submit">
-                                  {editingQuestion ? "حفظ التعديلات" : "حفظ السؤال"}
-                                </Button>
-                                <Button 
-                                  type="button" 
-                                  variant="outline"
-                                  onClick={cancelEdit}
-                                >
-                                  إلغاء
-                                </Button>
-                              </div>
-                            </form>
-                          </Form>
+                          <QuestionForm
+                            onSubmit={handleAddQuestion}
+                            onCancel={() => {
+                              setIsAddingQuestion(false);
+                              setEditingQuestion(null);
+                            }}
+                            initialData={editingQuestion}
+                            isEditing={!!editingQuestion}
+                          />
                         )}
 
                         <div className="space-y-4">
                           {selectedExam?.questions.map((question, index) => (
-                            <Card key={question.id}>
-                              <CardHeader className="flex flex-row items-start justify-between">
-                                <div>
-                                  <CardTitle className="text-lg">
-                                    السؤال {index + 1}
-                                  </CardTitle>
-                                  <p className="mt-2">{question.text}</p>
-                                </div>
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleEditQuestion(question)}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleDeleteQuestion(question.id)}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </CardHeader>
-                              <CardContent>
-                                <div className="space-y-2">
-                                  {question.options.map((option, optionIndex) => (
-                                    <div
-                                      key={optionIndex}
-                                      className={`p-2 rounded ${
-                                        optionIndex === question.correctAnswer
-                                          ? "bg-green-100 dark:bg-green-900"
-                                          : "bg-gray-50 dark:bg-gray-800"
-                                      }`}
-                                    >
-                                      {option}
-                                    </div>
-                                  ))}
-                                  <div className="mt-4">
-                                    <Label>تعليل الإجابة الصحيحة:</Label>
-                                    <p className="mt-1 text-muted-foreground">
-                                      {question.explanation}
-                                    </p>
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
+                            <QuestionCard
+                              key={question.id}
+                              question={question}
+                              index={index}
+                              onEdit={(q) => {
+                                setEditingQuestion(q);
+                                setIsAddingQuestion(true);
+                              }}
+                              onDelete={handleDeleteQuestion}
+                            />
                           ))}
                         </div>
                       </div>
