@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -7,23 +7,80 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Bell, Camera, Mail, Settings, User } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Profile = () => {
   const [imageUrl, setImageUrl] = useState<string>("/placeholder.svg");
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    name: "أحمد محمد",
-    email: "ahmed@example.com",
-    phone: "+966 50 123 4567",
-    notificationEmail: "ahmed@example.com"
+    name: "",
+    email: "",
+    phone: "",
+    notificationEmail: ""
   });
   const { toast } = useToast();
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    getProfile();
+  }, []);
+
+  const getProfile = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) throw new Error('No user found');
+
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      console.log("Profile data loaded:", profile);
+      
+      setFormData({
+        name: profile.full_name || '',
+        email: profile.email || '',
+        phone: profile.settings?.phone || '',
+        notificationEmail: profile.settings?.notificationEmail || profile.email || ''
+      });
+
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      toast({
+        title: "خطأ في تحميل الملف الشخصي",
+        description: "حدث خطأ أثناء تحميل بياناتك الشخصية",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setImageUrl(url);
-      console.log("Profile image updated:", url);
+      try {
+        const url = URL.createObjectURL(file);
+        setImageUrl(url);
+        console.log("Profile image updated:", url);
+        
+        // TODO: Implement file upload to Supabase Storage
+        toast({
+          title: "تم تحديث الصورة",
+          description: "تم تحديث صورة الملف الشخصي بنجاح",
+        });
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        toast({
+          title: "خطأ في تحديث الصورة",
+          description: "حدث خطأ أثناء تحديث صورة الملف الشخصي",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -36,14 +93,55 @@ const Profile = () => {
     console.log(`Field ${id} updated:`, value);
   };
 
-  const handleSaveChanges = () => {
-    console.log("Saving profile changes:", formData);
-    
-    toast({
-      title: "تم حفظ التغييرات",
-      description: "تم تحديث معلومات الملف الشخصي بنجاح",
-    });
+  const handleSaveChanges = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) throw new Error('No user found');
+
+      const updates = {
+        id: user.id,
+        full_name: formData.name,
+        settings: {
+          phone: formData.phone,
+          notificationEmail: formData.notificationEmail
+        },
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      console.log("Profile updated successfully:", updates);
+      
+      toast({
+        title: "تم حفظ التغييرات",
+        description: "تم تحديث معلومات الملف الشخصي بنجاح",
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "خطأ في حفظ التغييرات",
+        description: "حدث خطأ أثناء تحديث معلومات الملف الشخصي",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center" dir="rtl">
+        <div className="text-center">جاري التحميل...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FA]" dir="rtl">
@@ -112,8 +210,8 @@ const Profile = () => {
                     id="email" 
                     type="email" 
                     value={formData.email}
-                    onChange={handleInputChange}
-                    className="bg-white"
+                    disabled
+                    className="bg-gray-50"
                   />
                 </div>
                 <div className="space-y-2">
@@ -128,9 +226,10 @@ const Profile = () => {
                 </div>
                 <Button 
                   onClick={handleSaveChanges}
+                  disabled={loading}
                   className="w-full bg-primary hover:bg-primary/90 text-white"
                 >
-                  حفظ التغييرات
+                  {loading ? "جاري الحفظ..." : "حفظ التغييرات"}
                 </Button>
               </CardContent>
             </Card>
@@ -174,9 +273,10 @@ const Profile = () => {
                 </div>
                 <Button 
                   onClick={handleSaveChanges}
+                  disabled={loading}
                   className="w-full bg-primary hover:bg-primary/90 text-white"
                 >
-                  حفظ التغييرات
+                  {loading ? "جاري الحفظ..." : "حفظ التغييرات"}
                 </Button>
               </CardContent>
             </Card>
