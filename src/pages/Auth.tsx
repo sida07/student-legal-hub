@@ -37,7 +37,7 @@ const Auth = () => {
       if (data) {
         toast({
           title: "تم إنشاء الحساب بنجاح",
-          description: "يرجى تأكيد بريدك الإلكتروني للمتابعة",
+          description: "يرجى تأكيد بريدك الإلكتروني للمتابعة. تحقق من صندوق الوارد الخاص بك.",
         });
       }
     } catch (error: any) {
@@ -61,7 +61,18 @@ const Auth = () => {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes("Email not confirmed")) {
+          toast({
+            variant: "destructive",
+            title: "البريد الإلكتروني غير مؤكد",
+            description: "يرجى تأكيد بريدك الإلكتروني أولاً. تحقق من صندوق الوارد الخاص بك.",
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       if (data.session) {
         toast({
