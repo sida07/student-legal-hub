@@ -154,7 +154,7 @@ const Auth = () => {
                     <User className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground" />
                     <Input
                       id="fullName"
-                      placeholder="محمد أحمد"
+                      placeholder="الاسم الكامل"
                       required
                       className="pr-10"
                       value={fullName}
