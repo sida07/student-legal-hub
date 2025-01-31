@@ -41,11 +41,14 @@ const Profile = () => {
 
       console.log("Profile data loaded:", profile);
       
+      // Safely access settings properties with optional chaining and default values
+      const settings = profile.settings as { phone?: string; notificationEmail?: string } | null;
+      
       setFormData({
         name: profile.full_name || '',
         email: profile.email || '',
-        phone: profile.settings?.phone || '',
-        notificationEmail: profile.settings?.notificationEmail || profile.email || ''
+        phone: settings?.phone || '',
+        notificationEmail: settings?.notificationEmail || profile.email || ''
       });
 
     } catch (error) {
