@@ -23,6 +23,7 @@ import QuestionForm from "./QuestionForm";
 import QuestionCard from "./QuestionCard";
 import { Exam, Question } from "./types";
 import { supabase } from "@/integrations/supabase/client";
+import { mapDatabaseExamToExam, mapDatabaseQuestionToQuestion, calculateExamStats } from "./utils";
 
 const years = Array.from({ length: 25 }, (_, i) => ({
   year: (2024 - i).toString(),
@@ -53,8 +54,8 @@ const AdminExams = () => {
 
       if (error) throw error;
 
-      console.log("Exam added successfully:", examData);
-      setExams([...exams, examData]);
+      const newExam = mapDatabaseExamToExam(examData);
+      setExams([...exams, newExam]);
       
       toast({
         title: "تم إضافة الاختبار بنجاح",
@@ -63,6 +64,73 @@ const AdminExams = () => {
       console.error("Error adding exam:", error);
       toast({
         title: "حدث خطأ أثناء إضافة الاختبار",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditExam = async (data: any) => {
+    if (!editingExam) return;
+
+    try {
+      const { error } = await supabase
+        .from('exams')
+        .update({
+          title: data.title,
+          type: data.type,
+          ...(data.type === "historical" ? { year: data.year } : { subject: data.subject }),
+        })
+        .eq('id', editingExam.id);
+
+      if (error) throw error;
+
+      const updatedExams = exams.map(exam => 
+        exam.id === editingExam.id 
+          ? { ...exam, ...data }
+          : exam
+      );
+
+      setExams(updatedExams);
+      setEditingExam(null);
+      
+      toast({
+        title: "تم تحديث الاختبار بنجاح",
+      });
+    } catch (error) {
+      console.error("Error updating exam:", error);
+      toast({
+        title: "حدث خطأ أثناء تحديث الاختبار",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCopyExam = async (exam: Exam) => {
+    try {
+      const { data: newExam, error } = await supabase
+        .from('exams')
+        .insert([{
+          title: `نسخة من ${exam.title}`,
+          type: exam.type,
+          year: exam.year,
+          subject: exam.subject,
+          status: 'active'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const mappedExam = mapDatabaseExamToExam(newExam);
+      setExams([...exams, mappedExam]);
+      
+      toast({
+        title: "تم نسخ الاختبار بنجاح",
+      });
+    } catch (error) {
+      console.error("Error copying exam:", error);
+      toast({
+        title: "حدث خطأ أثناء نسخ الاختبار",
         variant: "destructive",
       });
     }
@@ -100,9 +168,10 @@ const AdminExams = () => {
 
         if (error) throw error;
 
+        const mappedQuestion = mapDatabaseQuestionToQuestion(newQuestion);
         const updatedExam = {
           ...selectedExam,
-          questions: [...selectedExam.questions, newQuestion],
+          questions: [...selectedExam.questions, mappedQuestion],
         };
 
         setSelectedExam(updatedExam);
