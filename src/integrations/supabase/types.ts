@@ -98,50 +98,39 @@ export type Database = {
           },
         ]
       }
-
-profiles: {
-  Row: {
-    created_at: string
-    email: string
-    full_name: string | null
-    id: string
-    last_name: string | null
-    role: string | null
-    settings: {
-      phone?: string
-      notificationEmail?: string
-    } | null
-    updated_at: string
-  }
-  Insert: {
-    created_at?: string
-    email: string
-    full_name?: string | null
-    id: string
-    last_name?: string | null
-    role?: string | null
-    settings?: {
-      phone?: string
-      notificationEmail?: string
-    } | null
-    updated_at?: string
-  }
-  Update: {
-    created_at?: string
-    email?: string
-    full_name?: string | null
-    id?: string
-    last_name?: string | null
-    role?: string | null
-    settings?: {
-      phone?: string
-      notificationEmail?: string
-    } | null
-    updated_at?: string
-  }
-  Relationships: []
-}
-
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          last_name: string | null
+          role: string | null
+          settings: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          last_name?: string | null
+          role?: string | null
+          settings?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          last_name?: string | null
+          role?: string | null
+          settings?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       questions: {
         Row: {
           correct_answer: number
@@ -337,4 +326,3 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-

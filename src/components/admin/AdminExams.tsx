@@ -22,6 +22,7 @@ import ExamForm from "./ExamForm";
 import QuestionForm from "./QuestionForm";
 import QuestionCard from "./QuestionCard";
 import { Exam, Question } from "./types";
+import { supabase } from "@/integrations/supabase/client";
 
 const years = Array.from({ length: 25 }, (_, i) => ({
   year: (2024 - i).toString(),
@@ -29,43 +30,7 @@ const years = Array.from({ length: 25 }, (_, i) => ({
 }));
 
 const AdminExams = () => {
-  const [exams, setExams] = useState<Exam[]>([
-    {
-      id: 1,
-      title: "اختبار القانون المدني 2024",
-      type: "subject",
-      subject: "القانون المدني",
-      attempts: 156,
-      status: "نشط",
-      questions: [
-        {
-          id: 1,
-          text: "سؤال تجريبي 1",
-          options: ["خيار 1", "خيار 2", "خيار 3"],
-          correctAnswer: 0,
-          explanation: "شرح الإجابة الصحيحة"
-        }
-      ],
-    },
-    {
-      id: 2,
-      title: "اختبار سنة 2023",
-      type: "historical",
-      year: "2023",
-      attempts: 89,
-      status: "نشط",
-      questions: [
-        {
-          id: 1,
-          text: "سؤال من سنة 2023",
-          options: ["خيار 1", "خيار 2", "خيار 3"],
-          correctAnswer: 1,
-          explanation: "شرح الإجابة الصحيحة"
-        }
-      ],
-    }
-  ]);
-
+  const [exams, setExams] = useState<Exam[]>([]);
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -73,139 +38,126 @@ const AdminExams = () => {
   const [showStats, setShowStats] = useState(false);
   const { toast } = useToast();
 
-  const handleAddExam = (data: any) => {
-    const maxQuestions = data.type === "historical" ? 50 : 100;
-    const newExam: Exam = {
-      id: exams.length + 1,
-      title: data.title,
-      type: data.type,
-      ...(data.type === "historical" ? { year: data.year } : { subject: data.subject }),
-      attempts: 0,
-      status: "نشط",
-      questions: [],
-    };
-    setExams([...exams, newExam]);
-    toast({
-      title: "تم إضافة الاختبار بنجاح",
-      description: `يمكنك إضافة حتى ${maxQuestions} سؤال لهذا الاختبار`,
-    });
-  };
+  const handleAddExam = async (data: any) => {
+    try {
+      const { data: examData, error } = await supabase
+        .from('exams')
+        .insert([{
+          title: data.title,
+          type: data.type,
+          ...(data.type === "historical" ? { year: data.year } : { subject: data.subject }),
+          status: 'active'
+        }])
+        .select()
+        .single();
 
-  const handleCopyExam = (exam: Exam) => {
-    const newExam: Exam = {
-      ...exam,
-      id: exams.length + 1,
-      title: `نسخة من ${exam.title}`,
-      attempts: 0,
-      questions: [...exam.questions],
-    };
-    setExams([...exams, newExam]);
-    toast({
-      title: "تم نسخ الاختبار بنجاح",
-    });
-  };
+      if (error) throw error;
 
-  const calculateExamStats = (exam: Exam) => {
-    const totalQuestions = exam.questions.length;
-    const averageAttempts = exam.attempts / (totalQuestions || 1);
-    
-    return {
-      totalQuestions,
-      averageAttempts: averageAttempts.toFixed(1),
-      successRate: "75%", // هذه نسبة افتراضية، يمكن حسابها من البيانات الفعلية
-      averageTime: "15 دقيقة", // وقت افتراضي
-    };
-  };
-
-  const handleEditExam = (data: any) => {
-    if (!editingExam) return;
-    
-    const updatedExam: Exam = {
-      ...editingExam,
-      title: data.title,
-      type: data.type,
-      ...(data.type === "historical" ? { year: data.year } : { subject: data.subject }),
-    };
-
-    setExams(exams.map(exam => 
-      exam.id === editingExam.id ? updatedExam : exam
-    ));
-
-    setEditingExam(null);
-    toast({
-      title: "تم تحديث الاختبار بنجاح",
-    });
-  };
-
-  const handleAddQuestion = (data: any) => {
-    if (!selectedExam) return;
-
-    const maxQuestions = selectedExam.type === "historical" ? 50 : 100;
-    if (selectedExam.questions.length >= maxQuestions && !editingQuestion) {
+      console.log("Exam added successfully:", examData);
+      setExams([...exams, examData]);
+      
       toast({
-        title: "لا يمكن إضافة المزيد من الأسئلة",
-        description: `الحد الأقصى هو ${maxQuestions} سؤال`,
+        title: "تم إضافة الاختبار بنجاح",
+      });
+    } catch (error) {
+      console.error("Error adding exam:", error);
+      toast({
+        title: "حدث خطأ أثناء إضافة الاختبار",
         variant: "destructive",
       });
-      return;
     }
-
-    const questionData = {
-      text: data.questionText,
-      options: data.options,
-      correctAnswer: parseInt(data.correctAnswer) - 1,
-      explanation: data.explanation,
-    };
-
-    let updatedQuestions;
-    if (editingQuestion) {
-      updatedQuestions = selectedExam.questions.map(q => 
-        q.id === editingQuestion.id ? { ...questionData, id: q.id } : q
-      );
-      toast({
-        title: "تم تحديث السؤال بنجاح",
-      });
-    } else {
-      const newQuestion = {
-        ...questionData,
-        id: selectedExam.questions.length + 1,
-      };
-      updatedQuestions = [...selectedExam.questions, newQuestion];
-      toast({
-        title: "تم إضافة السؤال بنجاح",
-      });
-    }
-
-    const updatedExam = {
-      ...selectedExam,
-      questions: updatedQuestions,
-    };
-
-    setExams(exams.map(exam => 
-      exam.id === selectedExam.id ? updatedExam : exam
-    ));
-
-    setSelectedExam(updatedExam);
-    setIsAddingQuestion(false);
-    setEditingQuestion(null);
   };
 
-  const handleDeleteQuestion = (questionId: number) => {
+  const handleAddQuestion = async (data: any) => {
     if (!selectedExam) return;
 
-    const updatedQuestions = selectedExam.questions.filter(q => q.id !== questionId);
-    const updatedExam = {
-      ...selectedExam,
-      questions: updatedQuestions,
-    };
+    try {
+      const questionData = {
+        exam_id: selectedExam.id,
+        text: data.questionText,
+        options: data.options,
+        correct_answer: parseInt(data.correctAnswer) - 1,
+        explanation: data.explanation,
+      };
 
-    setExams(exams.map(exam => 
-      exam.id === selectedExam.id ? updatedExam : exam
-    ));
-    setSelectedExam(updatedExam);
-    toast({
-      title: "تم حذف السؤال بنجاح",
-    });
+      if (editingQuestion) {
+        const { error } = await supabase
+          .from('questions')
+          .update(questionData)
+          .eq('id', editingQuestion.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "تم تحديث السؤال بنجاح",
+        });
+      } else {
+        const { data: newQuestion, error } = await supabase
+          .from('questions')
+          .insert([questionData])
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        const updatedExam = {
+          ...selectedExam,
+          questions: [...selectedExam.questions, newQuestion],
+        };
+
+        setSelectedExam(updatedExam);
+        setExams(exams.map(exam => 
+          exam.id === selectedExam.id ? updatedExam : exam
+        ));
+
+        toast({
+          title: "تم إضافة السؤال بنجاح",
+        });
+      }
+
+      setIsAddingQuestion(false);
+      setEditingQuestion(null);
+    } catch (error) {
+      console.error("Error managing question:", error);
+      toast({
+        title: "حدث خطأ أثناء إدارة السؤال",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteQuestion = async (questionId: number) => {
+    if (!selectedExam) return;
+
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .delete()
+        .eq('id', questionId);
+
+      if (error) throw error;
+
+      const updatedQuestions = selectedExam.questions.filter(q => q.id !== questionId);
+      const updatedExam = {
+        ...selectedExam,
+        questions: updatedQuestions,
+      };
+
+      setExams(exams.map(exam => 
+        exam.id === selectedExam.id ? updatedExam : exam
+      ));
+      setSelectedExam(updatedExam);
+      
+      toast({
+        title: "تم حذف السؤال بنجاح",
+      });
+    } catch (error) {
+      console.error("Error deleting question:", error);
+      toast({
+        title: "حدث خطأ أثناء حذف السؤال",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
