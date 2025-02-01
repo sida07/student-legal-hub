@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,33 +15,97 @@ import AdminExams from "@/components/admin/AdminExams";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminDiscussions from "@/components/admin/AdminDiscussions";
 import AdminSettings from "@/components/admin/AdminSettings";
+import { supabase } from "@/integrations/supabase/client";
+
+interface DashboardStats {
+  totalUsers: number;
+  totalExams: number;
+  totalDiscussions: number;
+  totalComments: number;
+}
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [stats, setStats] = useState<DashboardStats>({
+    totalUsers: 0,
+    totalExams: 0,
+    totalDiscussions: 0,
+    totalComments: 0
+  });
+  const [loading, setLoading] = useState(true);
 
-  // إحصائيات عامة للوحة التحكم
-  const stats = [
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      // Fetch total users
+      const { count: usersCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch total exams
+      const { count: examsCount } = await supabase
+        .from('exams')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch total discussions
+      const { count: discussionsCount } = await supabase
+        .from('discussions')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch total comments
+      const { count: commentsCount } = await supabase
+        .from('discussion_comments')
+        .select('*', { count: 'exact', head: true });
+
+      setStats({
+        totalUsers: usersCount || 0,
+        totalExams: examsCount || 0,
+        totalDiscussions: discussionsCount || 0,
+        totalComments: commentsCount || 0
+      });
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      setLoading(false);
+    }
+  };
+
+  const statsCards = [
     {
       title: "إجمالي المستخدمين",
-      value: "1,234",
+      value: stats.totalUsers.toString(),
       icon: Users,
     },
     {
-      title: "الدورات النشطة",
-      value: "45",
-      icon: BookOpen,
-    },
-    {
       title: "الاختبارات",
-      value: "89",
+      value: stats.totalExams.toString(),
       icon: FileQuestion,
     },
     {
       title: "المناقشات",
-      value: "156",
+      value: stats.totalDiscussions.toString(),
       icon: MessageSquare,
     },
+    {
+      title: "التعليقات",
+      value: stats.totalComments.toString(),
+      icon: BookOpen,
+    },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background" dir="rtl">
+        <Navigation />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">جاري تحميل البيانات...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
@@ -54,7 +118,7 @@ const AdminDashboard = () => {
 
         {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat) => (
+          {statsCards.map((stat) => (
             <Card key={stat.title}>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">
