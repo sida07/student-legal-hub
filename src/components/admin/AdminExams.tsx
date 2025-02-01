@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Edit, Copy, ChartBar } from "lucide-react";
@@ -18,6 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExamForm from "./ExamForm";
 import QuestionForm from "./QuestionForm";
 import QuestionCard from "./QuestionCard";
@@ -38,6 +39,36 @@ const AdminExams = () => {
   const [editingExam, setEditingExam] = useState<Exam | null>(null);
   const [showStats, setShowStats] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchExams();
+  }, []);
+
+  const fetchExams = async () => {
+    try {
+      const { data: examsData, error } = await supabase
+        .from('exams')
+        .select(`
+          *,
+          questions (*)
+        `);
+
+      if (error) throw error;
+
+      const mappedExams = examsData.map(exam => ({
+        ...mapDatabaseExamToExam(exam),
+        questions: exam.questions ? exam.questions.map(mapDatabaseQuestionToQuestion) : []
+      }));
+
+      setExams(mappedExams);
+    } catch (error) {
+      console.error("Error fetching exams:", error);
+      toast({
+        title: "حدث خطأ أثناء جلب الاختبارات",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleAddExam = async (data: any) => {
     try {
@@ -229,6 +260,166 @@ const AdminExams = () => {
     }
   };
 
+  const historicalExams = exams.filter(exam => exam.type === "historical");
+  const subjectExams = exams.filter(exam => exam.type === "subject");
+
+  const ExamTable = ({ exams }: { exams: Exam[] }) => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>عنوان الاختبار</TableHead>
+          <TableHead>{exams[0]?.type === "historical" ? "السنة" : "المادة"}</TableHead>
+          <TableHead>عدد الأسئلة</TableHead>
+          <TableHead>الحالة</TableHead>
+          <TableHead>الإجراءات</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {exams.map((exam) => (
+          <TableRow key={exam.id}>
+            <TableCell>{exam.title}</TableCell>
+            <TableCell>{exam.type === "historical" ? exam.year : exam.subject}</TableCell>
+            <TableCell>{exam.questions.length}</TableCell>
+            <TableCell>{exam.status}</TableCell>
+            <TableCell>
+              <div className="flex gap-2">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setSelectedExam(exam)}
+                    >
+                      إدارة الأسئلة
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                      <DialogTitle>إدارة أسئلة {exam.title}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => {
+                            setIsAddingQuestion(true);
+                            setEditingQuestion(null);
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          إضافة سؤال جديد
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowStats(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <ChartBar className="h-4 w-4" />
+                          إحصائيات الاختبار
+                        </Button>
+                      </div>
+
+                      {showStats && (
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>إحصائيات الاختبار</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            {(() => {
+                              const stats = calculateExamStats(exam);
+                              return (
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">عدد الأسئلة</p>
+                                    <p className="text-2xl font-bold">{stats.totalQuestions}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">متوسط المحاولات</p>
+                                    <p className="text-2xl font-bold">{stats.averageAttempts}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">نسبة النجاح</p>
+                                    <p className="text-2xl font-bold">{stats.successRate}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">متوسط وقت الإجابة</p>
+                                    <p className="text-2xl font-bold">{stats.averageTime}</p>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {isAddingQuestion && (
+                        <QuestionForm
+                          onSubmit={handleAddQuestion}
+                          onCancel={() => {
+                            setIsAddingQuestion(false);
+                            setEditingQuestion(null);
+                          }}
+                          initialData={editingQuestion}
+                          isEditing={!!editingQuestion}
+                        />
+                      )}
+
+                      <div className="space-y-4">
+                        {exam.questions.map((question, index) => (
+                          <QuestionCard
+                            key={question.id}
+                            question={question}
+                            index={index}
+                            onEdit={(q) => {
+                              setEditingQuestion(q);
+                              setIsAddingQuestion(true);
+                            }}
+                            onDelete={handleDeleteQuestion}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleCopyExam(exam)}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setEditingExam(exam)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>تعديل الاختبار</DialogTitle>
+                    </DialogHeader>
+                    <ExamForm 
+                      onSubmit={handleEditExam} 
+                      years={years}
+                      initialData={editingExam}
+                      isEditing={true}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -249,160 +440,20 @@ const AdminExams = () => {
         </Dialog>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>عنوان الاختبار</TableHead>
-              <TableHead>نوع الاختبار</TableHead>
-              <TableHead>عدد المحاولات</TableHead>
-              <TableHead>الحالة</TableHead>
-              <TableHead>الإجراءات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {exams.map((exam) => (
-              <TableRow key={exam.id}>
-                <TableCell>{exam.title}</TableCell>
-                <TableCell>{exam.type === "historical" ? "اختبار سنوات سابقة" : "اختبار مادة"}</TableCell>
-                <TableCell>{exam.attempts}</TableCell>
-                <TableCell>{exam.status}</TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setSelectedExam(exam)}
-                        >
-                          إدارة الأسئلة
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl">
-                        <DialogHeader>
-                          <DialogTitle>إدارة أسئلة {exam.title}</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={() => {
-                                setIsAddingQuestion(true);
-                                setEditingQuestion(null);
-                              }}
-                              className="flex items-center gap-2"
-                            >
-                              <Plus className="h-4 w-4" />
-                              إضافة سؤال جديد
-                            </Button>
-                            <Button
-                              variant="outline"
-                              onClick={() => setShowStats(true)}
-                              className="flex items-center gap-2"
-                            >
-                              <ChartBar className="h-4 w-4" />
-                              إحصائيات الاختبار
-                            </Button>
-                          </div>
-
-                          {showStats && (
-                            <Card>
-                              <CardHeader>
-                                <CardTitle>إحصائيات الاختبار</CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                {(() => {
-                                  const stats = calculateExamStats(exam);
-                                  return (
-                                    <div className="grid grid-cols-2 gap-4">
-                                      <div>
-                                        <p className="text-sm text-muted-foreground">عدد الأسئلة</p>
-                                        <p className="text-2xl font-bold">{stats.totalQuestions}</p>
-                                      </div>
-                                      <div>
-                                        <p className="text-sm text-muted-foreground">متوسط المحاولات</p>
-                                        <p className="text-2xl font-bold">{stats.averageAttempts}</p>
-                                      </div>
-                                      <div>
-                                        <p className="text-sm text-muted-foreground">نسبة النجاح</p>
-                                        <p className="text-2xl font-bold">{stats.successRate}</p>
-                                      </div>
-                                      <div>
-                                        <p className="text-sm text-muted-foreground">متوسط وقت الإجابة</p>
-                                        <p className="text-2xl font-bold">{stats.averageTime}</p>
-                                      </div>
-                                    </div>
-                                  );
-                                })()}
-                              </CardContent>
-                            </Card>
-                          )}
-
-                          {isAddingQuestion && (
-                            <QuestionForm
-                              onSubmit={handleAddQuestion}
-                              onCancel={() => {
-                                setIsAddingQuestion(false);
-                                setEditingQuestion(null);
-                              }}
-                              initialData={editingQuestion}
-                              isEditing={!!editingQuestion}
-                            />
-                          )}
-
-                          <div className="space-y-4">
-                            {selectedExam?.questions.map((question, index) => (
-                              <QuestionCard
-                                key={question.id}
-                                question={question}
-                                index={index}
-                                onEdit={(q) => {
-                                  setEditingQuestion(q);
-                                  setIsAddingQuestion(true);
-                                }}
-                                onDelete={handleDeleteQuestion}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleCopyExam(exam)}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => setEditingExam(exam)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>تعديل الاختبار</DialogTitle>
-                        </DialogHeader>
-                        <ExamForm 
-                          onSubmit={handleEditExam} 
-                          years={years}
-                          initialData={editingExam}
-                          isEditing={true}
-                        />
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <Tabs defaultValue="historical" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="historical">الاختبارات السابقة</TabsTrigger>
+            <TabsTrigger value="subject">اختبارات المواد</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="historical">
+            <ExamTable exams={historicalExams} />
+          </TabsContent>
+          
+          <TabsContent value="subject">
+            <ExamTable exams={subjectExams} />
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
