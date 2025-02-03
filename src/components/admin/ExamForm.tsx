@@ -1,8 +1,10 @@
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Exam } from "./types";
 
 interface ExamFormProps {
@@ -12,8 +14,18 @@ interface ExamFormProps {
   isEditing?: boolean;
 }
 
+const formSchema = z.object({
+  title: z.string().min(1, "عنوان الاختبار مطلوب"),
+  type: z.enum(["historical", "subject"]),
+  year: z.string().optional(),
+  subject: z.string().optional(),
+});
+
 const ExamForm = ({ onSubmit, years, initialData, isEditing }: ExamFormProps) => {
+  console.log("ExamForm initialData:", initialData);
+
   const form = useForm({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       title: initialData?.title || "",
       type: initialData?.type || "historical",
@@ -22,9 +34,18 @@ const ExamForm = ({ onSubmit, years, initialData, isEditing }: ExamFormProps) =>
     },
   });
 
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
+    console.log("Form submitted with data:", data);
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="title"
@@ -34,6 +55,7 @@ const ExamForm = ({ onSubmit, years, initialData, isEditing }: ExamFormProps) =>
               <FormControl>
                 <Input {...field} />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -57,6 +79,7 @@ const ExamForm = ({ onSubmit, years, initialData, isEditing }: ExamFormProps) =>
                   <SelectItem value="subject">اختبار مادة</SelectItem>
                 </SelectContent>
               </Select>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -84,6 +107,7 @@ const ExamForm = ({ onSubmit, years, initialData, isEditing }: ExamFormProps) =>
                     ))}
                   </SelectContent>
                 </Select>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -108,6 +132,7 @@ const ExamForm = ({ onSubmit, years, initialData, isEditing }: ExamFormProps) =>
                     <SelectItem value="القانون الجزائي">القانون الجزائي</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormMessage />
               </FormItem>
             )}
           />

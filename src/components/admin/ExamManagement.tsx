@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import ExamForm from "./ExamForm";
 import { Exam } from "./types";
@@ -21,8 +21,10 @@ interface ExamManagementProps {
 
 const ExamManagement = ({ onExamAdded, years }: ExamManagementProps) => {
   const { toast } = useToast();
+  const [open, setOpen] = useState(false);
 
   const handleAddExam = async (data: any) => {
+    console.log("Handling exam addition with data:", data);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -34,22 +36,32 @@ const ExamManagement = ({ onExamAdded, years }: ExamManagementProps) => {
         return;
       }
 
-      const { data: examData, error } = await supabase
+      const examData = {
+        title: data.title,
+        type: data.type,
+        ...(data.type === "historical" ? { year: data.year } : { subject: data.subject }),
+        status: 'active',
+        created_by: session.user.id
+      };
+
+      console.log("Inserting exam data:", examData);
+
+      const { data: newExam, error } = await supabase
         .from('exams')
-        .insert([{
-          title: data.title,
-          type: data.type,
-          ...(data.type === "historical" ? { year: data.year } : { subject: data.subject }),
-          status: 'active',
-          created_by: session.user.id
-        }])
+        .insert([examData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
 
-      const newExam = mapDatabaseExamToExam(examData);
-      onExamAdded(newExam);
+      console.log("Received exam data from Supabase:", newExam);
+
+      const mappedExam = mapDatabaseExamToExam(newExam);
+      onExamAdded(mappedExam);
+      setOpen(false);
       
       toast({
         title: "تم إضافة الاختبار بنجاح",
@@ -64,7 +76,7 @@ const ExamManagement = ({ onExamAdded, years }: ExamManagementProps) => {
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
