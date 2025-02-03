@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Exam } from "@/components/admin/types";
-import { mapDatabaseExamToExam } from "@/components/admin/utils";
+import { mapDatabaseExamToExam, mapDatabaseQuestionToQuestion } from "@/components/admin/utils";
 
 export const useExams = () => {
   const [exams, setExams] = useState<Exam[]>([]);
@@ -29,7 +29,7 @@ export const useExams = () => {
 
       if (error) throw error;
 
-      const mappedExams = examsData.map(exam => ({
+      const mappedExams: Exam[] = examsData.map(exam => ({
         ...mapDatabaseExamToExam(exam),
         questions: exam.questions ? exam.questions.map(mapDatabaseQuestionToQuestion) : []
       }));

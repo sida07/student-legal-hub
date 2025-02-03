@@ -2,11 +2,18 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { mapDatabaseExamToExam } from "./utils";
+import { mapDatabaseExamToExam, mapDatabaseQuestionToQuestion } from "./utils";
 import ExamTable from "./ExamTable";
 import ExamDialog from "./ExamDialog";
 import ExamManagement from "./ExamManagement";
+import ExamForm from "./ExamForm";
 import { useExams } from "@/hooks/use-exams";
 import { Exam, Question } from "./types";
 
