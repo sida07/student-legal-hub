@@ -38,6 +38,16 @@ const AdminExams = () => {
 
   const fetchExams = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "يجب تسجيل الدخول أولاً",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data: examsData, error } = await supabase
         .from('exams')
         .select(`
@@ -64,13 +74,24 @@ const AdminExams = () => {
 
   const handleAddExam = async (data: any) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "يجب تسجيل الدخول أولاً",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data: examData, error } = await supabase
         .from('exams')
         .insert([{
           title: data.title,
           type: data.type,
           ...(data.type === "historical" ? { year: data.year } : { subject: data.subject }),
-          status: 'active'
+          status: 'active',
+          created_by: session.user.id
         }])
         .select()
         .single();
