@@ -1,22 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ExamForm from "./ExamForm";
-import { Exam, Question } from "./types";
 import { supabase } from "@/integrations/supabase/client";
-import { mapDatabaseExamToExam, mapDatabaseQuestionToQuestion } from "./utils";
+import { mapDatabaseExamToExam } from "./utils";
 import ExamTable from "./ExamTable";
 import ExamDialog from "./ExamDialog";
+import ExamManagement from "./ExamManagement";
+import { useExams } from "@/hooks/use-exams";
+import { Exam, Question } from "./types";
 
 const years = Array.from({ length: 25 }, (_, i) => ({
   year: (2024 - i).toString(),
@@ -24,94 +16,13 @@ const years = Array.from({ length: 25 }, (_, i) => ({
 }));
 
 const AdminExams = () => {
-  const [exams, setExams] = useState<Exam[]>([]);
+  const { exams, setExams } = useExams();
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [editingExam, setEditingExam] = useState<Exam | null>(null);
   const [showStats, setShowStats] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    fetchExams();
-  }, []);
-
-  const fetchExams = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          title: "يجب تسجيل الدخول أولاً",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { data: examsData, error } = await supabase
-        .from('exams')
-        .select(`
-          *,
-          questions (*)
-        `);
-
-      if (error) throw error;
-
-      const mappedExams = examsData.map(exam => ({
-        ...mapDatabaseExamToExam(exam),
-        questions: exam.questions ? exam.questions.map(mapDatabaseQuestionToQuestion) : []
-      }));
-
-      setExams(mappedExams);
-    } catch (error) {
-      console.error("Error fetching exams:", error);
-      toast({
-        title: "حدث خطأ أثناء جلب الاختبارات",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleAddExam = async (data: any) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          title: "يجب تسجيل الدخول أولاً",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { data: examData, error } = await supabase
-        .from('exams')
-        .insert([{
-          title: data.title,
-          type: data.type,
-          ...(data.type === "historical" ? { year: data.year } : { subject: data.subject }),
-          status: 'active',
-          created_by: session.user.id
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newExam = mapDatabaseExamToExam(examData);
-      setExams([...exams, newExam]);
-      
-      toast({
-        title: "تم إضافة الاختبار بنجاح",
-      });
-    } catch (error) {
-      console.error("Error adding exam:", error);
-      toast({
-        title: "حدث خطأ أثناء إضافة الاختبار",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleEditExam = async (data: any) => {
     if (!editingExam) return;
@@ -280,20 +191,10 @@ const AdminExams = () => {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>إدارة الاختبارات</CardTitle>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              إضافة اختبار جديد
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>إضافة اختبار جديد</DialogTitle>
-            </DialogHeader>
-            <ExamForm onSubmit={handleAddExam} years={years} />
-          </DialogContent>
-        </Dialog>
+        <ExamManagement 
+          onExamAdded={(exam) => setExams([...exams, exam])}
+          years={years}
+        />
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="historical" className="space-y-4">
