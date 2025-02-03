@@ -1,4 +1,4 @@
-import { Exam, Question } from "./types";
+import { Exam, Question, ExamStats } from "./types";
 
 export const mapDatabaseQuestionToQuestion = (dbQuestion: any): Question => ({
   id: dbQuestion.id,
@@ -21,3 +21,12 @@ export const mapDatabaseExamToExam = (dbExam: any): Exam => ({
   updated_at: dbExam.updated_at,
   created_by: dbExam.created_by,
 });
+
+export const calculateExamStats = (exam: Exam): ExamStats => {
+  return {
+    totalQuestions: exam.questions.length,
+    averageAttempts: "0",
+    successRate: "0%",
+    averageTime: "0 min",
+  };
+};
