@@ -1,19 +1,29 @@
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Question } from "./types";
 
 interface QuestionFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
-  initialData?: Question;
+  initialData?: Question | null;
   isEditing?: boolean;
 }
 
+const formSchema = z.object({
+  questionText: z.string().min(10, "نص السؤال يجب أن يكون 10 أحرف على الأقل"),
+  options: z.array(z.string().min(1, "الخيار مطلوب")).min(3, "يجب إضافة 3 خيارات على الأقل"),
+  correctAnswer: z.string().regex(/^[1-3]$/, "الرجاء اختيار رقم من 1 إلى 3"),
+  explanation: z.string().min(10, "التعليل يجب أن يكون 10 أحرف على الأقل"),
+});
+
 const QuestionForm = ({ onSubmit, onCancel, initialData, isEditing }: QuestionFormProps) => {
   const form = useForm({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       questionText: initialData?.text || "",
       options: initialData?.options || ["", "", ""],
@@ -34,9 +44,11 @@ const QuestionForm = ({ onSubmit, onCancel, initialData, isEditing }: QuestionFo
               <FormControl>
                 <Textarea {...field} />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
+
         {[0, 1, 2].map((index) => (
           <FormField
             key={index}
@@ -48,10 +60,12 @@ const QuestionForm = ({ onSubmit, onCancel, initialData, isEditing }: QuestionFo
                 <FormControl>
                   <Input {...field} />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
         ))}
+
         <FormField
           control={form.control}
           name="correctAnswer"
@@ -59,16 +73,13 @@ const QuestionForm = ({ onSubmit, onCancel, initialData, isEditing }: QuestionFo
             <FormItem>
               <FormLabel>رقم الإجابة الصحيحة (1-3)</FormLabel>
               <FormControl>
-                <Input 
-                  type="number" 
-                  min="1" 
-                  max="3" 
-                  {...field}
-                />
+                <Input type="number" min="1" max="3" {...field} />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="explanation"
@@ -78,18 +89,16 @@ const QuestionForm = ({ onSubmit, onCancel, initialData, isEditing }: QuestionFo
               <FormControl>
                 <Textarea {...field} />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
+
         <div className="flex gap-2">
           <Button type="submit">
-            {isEditing ? "حفظ التعديلات" : "حفظ السؤال"}
+            {isEditing ? "حفظ التعديلات" : "إضافة السؤال"}
           </Button>
-          <Button 
-            type="button" 
-            variant="outline"
-            onClick={onCancel}
-          >
+          <Button type="button" variant="outline" onClick={onCancel}>
             إلغاء
           </Button>
         </div>

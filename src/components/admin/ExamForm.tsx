@@ -15,10 +15,21 @@ interface ExamFormProps {
 }
 
 const formSchema = z.object({
-  title: z.string().min(1, "عنوان الاختبار مطلوب"),
+  title: z.string().min(5, "عنوان الاختبار يجب أن يكون 5 أحرف على الأقل"),
   type: z.enum(["historical", "subject"]),
   year: z.string().optional(),
   subject: z.string().optional(),
+}).refine((data) => {
+  if (data.type === "historical" && !data.year) {
+    return false;
+  }
+  if (data.type === "subject" && !data.subject) {
+    return false;
+  }
+  return true;
+}, {
+  message: "الرجاء إدخال جميع البيانات المطلوبة",
+  path: ["year", "subject"],
 });
 
 const ExamForm = ({ onSubmit, years, initialData, isEditing }: ExamFormProps) => {
