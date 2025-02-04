@@ -1,15 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { Copy, Edit } from "lucide-react";
+import { Copy, Edit, FileText, Calendar, BookOpen, Users, ChartBar } from "lucide-react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Exam } from "./types";
-import ExamDialog from "./ExamDialog";
+import { cn } from "@/lib/utils";
 
 interface ExamTableProps {
   exams: Exam[];
@@ -20,54 +20,82 @@ interface ExamTableProps {
 
 const ExamTable = ({ exams, onCopy, onEdit, onSelect }: ExamTableProps) => {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>عنوان الاختبار</TableHead>
-          <TableHead>{exams[0]?.type === "historical" ? "السنة" : "المادة"}</TableHead>
-          <TableHead>عدد الأسئلة</TableHead>
-          <TableHead>الحالة</TableHead>
-          <TableHead>الإجراءات</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {exams.map((exam) => (
-          <TableRow key={exam.id}>
-            <TableCell>{exam.title}</TableCell>
-            <TableCell>{exam.type === "historical" ? exam.year : exam.subject}</TableCell>
-            <TableCell>{exam.questions.length}</TableCell>
-            <TableCell>{exam.status}</TableCell>
-            <TableCell>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => onSelect(exam)}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {exams.map((exam) => (
+        <Card 
+          key={exam.id}
+          className={cn(
+            "group hover:shadow-lg transition-all duration-300 border-2",
+            exam.status === 'active' ? 'border-green-200' : 'border-yellow-200'
+          )}
+        >
+          <CardHeader className="space-y-1">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center space-x-2">
+                {exam.type === "historical" ? (
+                  <Calendar className="h-5 w-5 text-muted-foreground" />
+                ) : (
+                  <BookOpen className="h-5 w-5 text-muted-foreground" />
+                )}
+                <Badge 
+                  variant={exam.status === 'active' ? "default" : "secondary"}
+                  className="ml-2"
                 >
-                  إدارة الأسئلة
-                </Button>
-
+                  {exam.status === 'active' ? 'نشط' : 'غير نشط'}
+                </Badge>
+              </div>
+              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   size="sm"
                   onClick={() => onCopy(exam)}
+                  className="h-8 w-8 p-0"
                 >
                   <Copy className="h-4 w-4" />
                 </Button>
-
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   size="sm"
                   onClick={() => onEdit(exam)}
+                  className="h-8 w-8 p-0"
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
               </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+            </div>
+            <CardTitle className="text-xl font-bold">{exam.title}</CardTitle>
+            <CardDescription>
+              {exam.type === "historical" ? `سنة ${exam.year}` : exam.subject}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {exam.questions.length} سؤال
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {exam.attempts || 0} محاولة
+                  </span>
+                </div>
+              </div>
+              <Button 
+                className="w-full group-hover:bg-primary/90 transition-colors"
+                onClick={() => onSelect(exam)}
+              >
+                <ChartBar className="mr-2 h-4 w-4" />
+                إدارة الأسئلة
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 };
 

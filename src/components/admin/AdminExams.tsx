@@ -16,6 +16,7 @@ import ExamManagement from "./ExamManagement";
 import ExamForm from "./ExamForm";
 import { useExams } from "@/hooks/use-exams";
 import { Exam, Question } from "./types";
+import { Calendar, BookOpen, Loader2 } from "lucide-react";
 
 const years = Array.from({ length: 25 }, (_, i) => ({
   year: (2024 - i).toString(),
@@ -23,7 +24,7 @@ const years = Array.from({ length: 25 }, (_, i) => ({
 }));
 
 const AdminExams = () => {
-  const { exams, setExams } = useExams();
+  const { exams, setExams, loading } = useExams();
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -194,23 +195,73 @@ const AdminExams = () => {
   const historicalExams = exams.filter(exam => exam.type === "historical");
   const subjectExams = exams.filter(exam => exam.type === "subject");
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <Card>
+    <Card className="animate-fade-in">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>إدارة الاختبارات</CardTitle>
+        <div>
+          <CardTitle className="text-2xl font-bold">إدارة الاختبارات</CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            قم بإدارة الاختبارات وأسئلتها من هنا
+          </p>
+        </div>
         <ExamManagement 
           onExamAdded={(exam) => setExams([...exams, exam])}
           years={years}
         />
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                <CardTitle>الاختبارات السابقة</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{historicalExams.length}</div>
+              <p className="text-sm text-muted-foreground">
+                اختبار من السنوات السابقة
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center space-x-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                <CardTitle>اختبارات المواد</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{subjectExams.length}</div>
+              <p className="text-sm text-muted-foreground">
+                اختبار حسب المواد
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
         <Tabs defaultValue="historical" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="historical">الاختبارات السابقة</TabsTrigger>
-            <TabsTrigger value="subject">اختبارات المواد</TabsTrigger>
+          <TabsList className="w-full justify-start">
+            <TabsTrigger value="historical" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              الاختبارات السابقة
+            </TabsTrigger>
+            <TabsTrigger value="subject" className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              اختبارات المواد
+            </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="historical">
+          <TabsContent value="historical" className="animate-fade-in">
             <ExamTable 
               exams={historicalExams}
               onCopy={handleCopyExam}
@@ -219,7 +270,7 @@ const AdminExams = () => {
             />
           </TabsContent>
           
-          <TabsContent value="subject">
+          <TabsContent value="subject" className="animate-fade-in">
             <ExamTable 
               exams={subjectExams}
               onCopy={handleCopyExam}
