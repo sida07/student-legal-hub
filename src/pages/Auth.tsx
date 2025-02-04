@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,29 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // Check if user is admin
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email, role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.email === 'sidahmedbaha07@gmail.com') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
+      }
+    };
+    
+    checkSession();
+  }, [navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,11 +98,24 @@ const Auth = () => {
       }
 
       if (data.session) {
+        // Check if user is admin
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email, role')
+          .eq('id', data.session.user.id)
+          .single();
+
         toast({
           title: "تم تسجيل الدخول بنجاح",
           description: "مرحباً بك في بوابة القانون",
         });
-        navigate("/");
+
+        // Redirect admin users to admin dashboard
+        if (profile?.email === 'sidahmedbaha07@gmail.com') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       }
     } catch (error: any) {
       toast({
