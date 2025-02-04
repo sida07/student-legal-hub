@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { mapDatabaseExamToExam, mapDatabaseQuestionToQuestion } from "./utils";
@@ -17,6 +18,7 @@ import ExamForm from "./ExamForm";
 import { useExams } from "@/hooks/use-exams";
 import { Exam, Question } from "./types";
 import { Calendar, BookOpen, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const years = Array.from({ length: 25 }, (_, i) => ({
   year: (2024 - i).toString(),
@@ -30,10 +32,32 @@ const AdminExams = () => {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [editingExam, setEditingExam] = useState<Exam | null>(null);
   const [showStats, setShowStats] = useState(false);
+  const [session, setSession] = useState<any>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check for authentication
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (!session) {
+        navigate('/auth');
+        return;
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (!session) {
+        navigate('/auth');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const handleEditExam = async (data: any) => {
-    if (!editingExam) return;
+    if (!editingExam || !session) return;
 
     try {
       const { error } = await supabase
@@ -69,6 +93,14 @@ const AdminExams = () => {
   };
 
   const handleCopyExam = async (exam: Exam) => {
+    if (!session) {
+      toast({
+        title: "يجب تسجيل الدخول أولاً",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { data: newExam, error } = await supabase
         .from('exams')
@@ -77,7 +109,8 @@ const AdminExams = () => {
           type: exam.type,
           year: exam.year,
           subject: exam.subject,
-          status: 'active'
+          status: 'active',
+          created_by: session.user.id
         }])
         .select()
         .single();
@@ -192,8 +225,13 @@ const AdminExams = () => {
     }
   };
 
-  const historicalExams = exams.filter(exam => exam.type === "historical");
-  const subjectExams = exams.filter(exam => exam.type === "subject");
+  if (!session) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -202,6 +240,9 @@ const AdminExams = () => {
       </div>
     );
   }
+
+  const historicalExams = exams.filter(exam => exam.type === "historical");
+  const subjectExams = exams.filter(exam => exam.type === "subject");
 
   return (
     <Card className="animate-fade-in">
@@ -215,6 +256,7 @@ const AdminExams = () => {
         <ExamManagement 
           onExamAdded={(exam) => setExams([...exams, exam])}
           years={years}
+          userId={session.user.id}
         />
       </CardHeader>
       <CardContent className="space-y-6">
@@ -309,6 +351,9 @@ const AdminExams = () => {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>تعديل الاختبار</DialogTitle>
+                <DialogDescription>
+                  قم بتعديل معلومات الاختبار من هنا
+                </DialogDescription>
               </DialogHeader>
               <ExamForm 
                 onSubmit={handleEditExam}

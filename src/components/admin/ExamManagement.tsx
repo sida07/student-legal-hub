@@ -17,34 +17,22 @@ import { mapDatabaseExamToExam } from "./utils";
 interface ExamManagementProps {
   onExamAdded: (exam: Exam) => void;
   years: { year: string; count: number }[];
+  userId: string;
 }
 
-const ExamManagement = ({ onExamAdded, years }: ExamManagementProps) => {
+const ExamManagement = ({ onExamAdded, years, userId }: ExamManagementProps) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
 
   const handleAddExam = async (data: any) => {
-    console.log("Handling exam addition with data:", data);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          title: "يجب تسجيل الدخول أولاً",
-          variant: "destructive",
-        });
-        return;
-      }
-
       const examData = {
         title: data.title,
         type: data.type,
         ...(data.type === "historical" ? { year: data.year } : { subject: data.subject }),
         status: 'active',
-        created_by: session.user.id
+        created_by: userId
       };
-
-      console.log("Inserting exam data:", examData);
 
       const { data: newExam, error } = await supabase
         .from('exams')
@@ -52,12 +40,7 @@ const ExamManagement = ({ onExamAdded, years }: ExamManagementProps) => {
         .select()
         .single();
 
-      if (error) {
-        console.error("Supabase error:", error);
-        throw error;
-      }
-
-      console.log("Received exam data from Supabase:", newExam);
+      if (error) throw error;
 
       const mappedExam = mapDatabaseExamToExam(newExam);
       onExamAdded(mappedExam);
